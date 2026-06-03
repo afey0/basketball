@@ -56,13 +56,13 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
     const settings = await prisma.clubSettings.findFirst()
     const adminEmail = settings?.contactEmail || process.env.SMTP_USER || ''
     if (adminEmail) {
-      await sendSlipUploadNotification(
+      sendSlipUploadNotification(
         adminEmail,
         payment.student.parent?.name || 'Parent',
         `${payment.student.firstName} ${payment.student.lastName}`,
         payment.amount,
         payment.paymentMonth
-      )
+      ).catch(err => console.error('Failed to send slip upload notification email:', err))
     }
 
     return NextResponse.json(updated)
