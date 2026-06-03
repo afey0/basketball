@@ -14,6 +14,7 @@ const studentSchema = z.object({
   jerseyNumber: z.number().optional().nullable(),
   medicalNotes: z.string().optional().nullable(),
   status: z.string().optional(),
+  profilePhoto: z.string().optional().nullable(),
 })
 
 export async function GET(req: NextRequest) {
@@ -78,6 +79,7 @@ export async function POST(req: NextRequest) {
         jerseyNumber: data.jerseyNumber || null,
         medicalNotes: data.medicalNotes || null,
         status: data.status || 'ACTIVE',
+        profilePhoto: data.profilePhoto || null,
         enrollmentDate: new Date(),
       },
       include: {

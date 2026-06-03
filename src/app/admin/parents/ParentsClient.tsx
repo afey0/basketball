@@ -2,14 +2,28 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { Plus, Mail, Phone, User, ChevronDown, ChevronUp } from 'lucide-react'
+import { Plus, Mail, Phone, User, ChevronDown, ChevronUp, Edit, Trash2 } from 'lucide-react'
 
 interface Props { parents: any[] }
 
 export default function ParentsClient({ parents: initial }: Props) {
   const [parents, setParents] = useState(initial)
   const [showModal, setShowModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editingParent, setEditingParent] = useState<any | null>(null)
   const [expanded, setExpanded] = useState<number | null>(null)
+
+  async function handleDeleteParent(id: number) {
+    if (!confirm('Are you sure you want to delete this parent account? Any linked students will be unlinked.')) return
+    try {
+      const res = await fetch(`/api/parents/${id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Failed to delete')
+      setParents(prev => prev.filter(p => p.id !== id))
+      toast.success('Parent account deleted')
+    } catch {
+      toast.error('Failed to delete parent account')
+    }
+  }
 
   return (
     <div>
@@ -41,6 +55,14 @@ export default function ParentsClient({ parents: initial }: Props) {
                 </div>
               </div>
               <span className="badge badge-orange">{p.parentStudents.length} child{p.parentStudents.length !== 1 ? 'ren' : ''}</span>
+              <div style={{ display: 'flex', gap: '0.375rem', marginRight: '0.5rem' }} onClick={e => e.stopPropagation()}>
+                <button className="btn-ghost" style={{ padding: '0.35rem' }} onClick={() => { setEditingParent(p); setShowEditModal(true) }} title="Edit parent">
+                  <Edit size={14} />
+                </button>
+                <button className="btn-ghost" style={{ padding: '0.35rem', color: '#ef4444' }} onClick={() => handleDeleteParent(p.id)} title="Delete parent">
+                  <Trash2 size={14} />
+                </button>
+              </div>
               {expanded === p.id ? <ChevronUp size={16} style={{ color: '#8B8BA7' }} /> : <ChevronDown size={16} style={{ color: '#8B8BA7' }} />}
             </div>
 
@@ -85,6 +107,18 @@ export default function ParentsClient({ parents: initial }: Props) {
         <AddParentModal
           onClose={() => setShowModal(false)}
           onSave={p => { setParents(prev => [p, ...prev]); setShowModal(false) }}
+        />
+      )}
+
+      {showEditModal && editingParent && (
+        <EditParentModal
+          parent={editingParent}
+          onClose={() => { setShowEditModal(false); setEditingParent(null) }}
+          onSave={updated => {
+            setParents(prev => prev.map(p => p.id === updated.id ? { ...p, ...updated } : p))
+            setShowEditModal(false)
+            setEditingParent(null)
+          }}
         />
       )}
     </div>
@@ -152,6 +186,77 @@ function AddParentModal({ onClose, onSave }: any) {
             <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>
             <button type="submit" className="btn-primary" disabled={loading}>
               {loading ? 'Creating...' : 'Create Account'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+function EditParentModal({ parent, onClose, onSave }: any) {
+  const [form, setForm] = useState({ name: parent.name, email: parent.email, phone: parent.phone || '', password: '' })
+  const [loading, setLoading] = useState(false)
+  const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }))
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/parents/${parent.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          ...(form.password ? { password: form.password } : {})
+        }),
+      })
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error || 'Failed')
+      }
+      const data = await res.json()
+      onSave(data)
+      toast.success('Parent account updated!')
+    } catch (err: any) {
+      toast.error(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal">
+        <div className="modal-header">
+          <h2 style={{ fontWeight: 700, margin: 0, fontSize: '1rem' }}>Edit Parent Account</h2>
+          <button className="btn-ghost" style={{ padding: '0.375rem' }} onClick={onClose}>✕</button>
+        </div>
+        <form onSubmit={handleSubmit}>
+          <div className="modal-body">
+            <div className="form-group">
+              <label className="form-label">Full Name *</label>
+              <input className="input" required value={form.name} onChange={e => set('name', e.target.value)} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Email Address *</label>
+              <input className="input" type="email" required value={form.email} onChange={e => set('email', e.target.value)} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Phone Number</label>
+              <input className="input" value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="+960 ..." />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Change Password (leave blank to keep current)</label>
+              <input className="input" value={form.password} onChange={e => set('password', e.target.value)} placeholder="New password..." />
+            </div>
+          </div>
+          <div className="modal-footer">
+            <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>
+            <button type="submit" className="btn-primary" disabled={loading}>
+              {loading ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
         </form>

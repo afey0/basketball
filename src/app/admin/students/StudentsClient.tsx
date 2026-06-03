@@ -123,9 +123,18 @@ export default function StudentsClient({ students: initial, groups, parents }: P
               <tr key={s.id}>
                 <td>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-                    <div className="avatar" style={{ width: 32, height: 32, fontSize: '0.7rem' }}>
-                      {s.firstName[0]}{s.lastName[0]}
-                    </div>
+                    {s.profilePhoto ? (
+                      <img 
+                        src={s.profilePhoto} 
+                        alt={`${s.firstName} ${s.lastName}`}
+                        className="avatar" 
+                        style={{ width: 32, height: 32, objectFit: 'cover' }} 
+                      />
+                    ) : (
+                      <div className="avatar" style={{ width: 32, height: 32, fontSize: '0.7rem' }}>
+                        {s.firstName[0]}{s.lastName[0]}
+                      </div>
+                    )}
                     <div>
                       <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{s.firstName} {s.lastName}</div>
                       {s.jerseyNumber && <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>#{s.jerseyNumber}</div>}
@@ -180,13 +189,47 @@ export default function StudentsClient({ students: initial, groups, parents }: P
   )
 }
 
-function StudentModal({ groups, parents, student, onClose, onSave }: any) {
+export function StudentModal({ groups, parents, student, onClose, onSave }: any) {
   const isEdit = !!student
-  const [form, setForm] = useState(student || {
-    firstName: '', lastName: '', dateOfBirth: '', gender: 'MALE',
-    ageGroup: 'U-8', trainingGroupId: '', parentId: '', jerseyNumber: '', medicalNotes: ''
+  const [form, setForm] = useState(() => {
+    if (student) {
+      return {
+        ...student,
+        profilePhoto: student.profilePhoto || ''
+      }
+    }
+    return {
+      firstName: '', lastName: '', dateOfBirth: '', gender: 'MALE',
+      ageGroup: 'U-8', trainingGroupId: '', parentId: '', jerseyNumber: '', medicalNotes: '',
+      profilePhoto: ''
+    }
   })
   const [loading, setLoading] = useState(false)
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
+
+  async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploadingPhoto(true)
+    const formData = new FormData()
+    formData.append('file', file)
+
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      })
+      if (!res.ok) throw new Error('Upload failed')
+      const data = await res.json()
+      set('profilePhoto', data.url)
+      toast.success('Photo uploaded successfully!')
+    } catch {
+      toast.error('Failed to upload profile photo')
+    } finally {
+      setUploadingPhoto(false)
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -225,6 +268,29 @@ function StudentModal({ groups, parents, student, onClose, onSave }: any) {
         </div>
         <form onSubmit={handleSubmit}>
           <div className="modal-body">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.25rem' }}>
+              <div style={{ position: 'relative' }}>
+                {form.profilePhoto ? (
+                  <img src={form.profilePhoto} alt="Preview" className="avatar" style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover' }} />
+                ) : (
+                  <div className="avatar" style={{ width: 56, height: 56, fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%' }}>
+                    {form.firstName?.[0] || 'S'}
+                  </div>
+                )}
+              </div>
+              <div style={{ flex: 1 }}>
+                <label className="form-label" style={{ marginBottom: '0.25rem' }}>Profile Picture</label>
+                <input 
+                  type="file" 
+                  className="input" 
+                  accept="image/png, image/jpeg, image/jpg"
+                  onChange={handlePhotoUpload}
+                  disabled={uploadingPhoto || loading}
+                  style={{ padding: '0.35rem 0.5rem', fontSize: '0.8rem' }}
+                />
+                {uploadingPhoto && <span style={{ fontSize: '0.75rem', color: 'var(--brand)', marginTop: '0.25rem', display: 'block' }}>Uploading...</span>}
+              </div>
+            </div>
             <div className="grid-2">
               <div className="form-group">
                 <label className="form-label">First Name *</label>

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { Edit, Mail, Phone, Calendar, CreditCard, CheckSquare, User, AlertCircle } from 'lucide-react'
 import { formatDate, formatCurrency, formatMonth, calculateAge, getStatusColor } from '@/lib/utils'
+import { StudentModal } from '../StudentsClient'
 
 interface Props {
   student: any
@@ -28,13 +29,22 @@ export default function StudentDetailClient({ student: initial, groups, parents 
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
       {/* Profile Header */}
       <div className="card" style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
-        <div className="avatar avatar-xl" style={{
-          background: student.gender === 'FEMALE'
-            ? 'linear-gradient(135deg, #ec4899, #f43f5e)'
-            : 'linear-gradient(135deg, var(--brand), #6366f1)',
-        }}>
-          {student.firstName[0]}{student.lastName[0]}
-        </div>
+        {student.profilePhoto ? (
+          <img 
+            src={student.profilePhoto} 
+            alt={`${student.firstName} ${student.lastName}`}
+            className="avatar avatar-xl" 
+            style={{ objectFit: 'cover' }} 
+          />
+        ) : (
+          <div className="avatar avatar-xl" style={{
+            background: student.gender === 'FEMALE'
+              ? 'linear-gradient(135deg, #ec4899, #f43f5e)'
+              : 'linear-gradient(135deg, var(--brand), #6366f1)',
+          }}>
+            {student.firstName[0]}{student.lastName[0]}
+          </div>
+        )}
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
@@ -236,6 +246,19 @@ export default function StudentDetailClient({ student: initial, groups, parents 
             </tbody>
           </table>
         </div>
+      )}
+
+      {showEdit && (
+        <StudentModal
+          groups={groups}
+          parents={parents}
+          student={student}
+          onClose={() => setShowEdit(false)}
+          onSave={(updated: any) => {
+            setStudent(updated)
+            setShowEdit(false)
+          }}
+        />
       )}
     </div>
   )

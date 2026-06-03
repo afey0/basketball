@@ -45,6 +45,7 @@ export async function PUT(req: NextRequest, props: { params: Promise<{ id: strin
       ...(body.jerseyNumber !== undefined && { jerseyNumber: body.jerseyNumber || null }),
       ...(body.medicalNotes !== undefined && { medicalNotes: body.medicalNotes }),
       ...(body.status && { status: body.status }),
+      ...(body.profilePhoto !== undefined && { profilePhoto: body.profilePhoto }),
     },
     include: { trainingGroup: true, parent: true },
   })

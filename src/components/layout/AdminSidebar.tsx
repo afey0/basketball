@@ -36,6 +36,7 @@ const navSections = [
   {
     title: 'System',
     items: [
+      { href: '/admin/users', icon: UserCheck, label: 'User Accounts' },
       { href: '/admin/settings', icon: Settings, label: 'Settings' },
     ]
   }
