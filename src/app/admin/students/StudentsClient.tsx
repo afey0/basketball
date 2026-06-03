@@ -9,7 +9,7 @@ import Link from 'next/link'
 interface Props { students: any[]; groups: any[]; parents: any[] }
 
 const statusColor = (s: string) => (
-  s === 'ACTIVE' ? 'badge-green' : s === 'SUSPENDED' ? 'badge-red' : 'badge-gray'
+  s === 'ACTIVE' ? 'badge-green' : s === 'SUSPENDED' ? 'badge-red' : s === 'DELETED_BY_PARENT' ? 'badge-red' : 'badge-gray'
 )
 
 const paymentColor = (s: string | undefined) => (
@@ -150,7 +150,7 @@ export default function StudentsClient({ students: initial, groups, parents }: P
                   <div style={{ fontSize: '0.8rem' }}>{s.parent?.name || '—'}</div>
                   <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{s.parent?.phone}</div>
                 </td>
-                <td><span className={`badge ${statusColor(s.status)}`}>{s.status}</span></td>
+                <td><span className={`badge ${statusColor(s.status)}`}>{s.status === 'DELETED_BY_PARENT' ? 'Deleted by Parent' : s.status}</span></td>
                 <td>
                   <span className={`badge ${paymentColor(s.payments?.[0]?.status)}`}>
                     {s.payments?.[0]?.status || 'N/A'}

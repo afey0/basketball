@@ -31,11 +31,11 @@ export default async function PortalSchedulePage() {
           <h2 style={{ fontWeight: 700, fontSize: '1.125rem', marginBottom: '0.875rem' }}>
             {child.firstName} {child.lastName} · {child.trainingGroup?.groupName || 'No group'}
           </h2>
-          {child.trainingGroup?.schedules.length === 0 ? (
+          {!child.trainingGroup || !child.trainingGroup.schedules || child.trainingGroup.schedules.length === 0 ? (
             <p style={{ color: 'var(--text-muted)' }}>No sessions scheduled</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              {[...child.trainingGroup!.schedules].sort((a,b) => (DAY_ORDER[a.dayOfWeek]||0) - (DAY_ORDER[b.dayOfWeek]||0)).map(s => (
+              {[...(child.trainingGroup?.schedules || [])].sort((a,b) => (DAY_ORDER[a.dayOfWeek]||0) - (DAY_ORDER[b.dayOfWeek]||0)).map(s => (
                 <div key={s.id} className="card" style={{
                   display: 'flex', alignItems: 'center', gap: '1.25rem',
                   borderColor: s.dayOfWeek === todayDow ? 'var(--brand)' : undefined,

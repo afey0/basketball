@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/auth'
 import bcrypt from 'bcryptjs'
+import { sendPasswordResetEmail } from '@/lib/email'
 
 export async function PUT(req: NextRequest, props: { params: Promise<{ id: string }> }) {
   const session = await auth()
@@ -26,6 +27,11 @@ export async function PUT(req: NextRequest, props: { params: Promise<{ id: strin
       where: { id, role: 'PARENT' },
       data,
     })
+
+    if (body.password) {
+      sendPasswordResetEmail(updated.email, updated.name, updated.role, body.password)
+        .catch(err => console.error('Failed to send password reset email:', err))
+    }
 
     const { password: _, ...safeUser } = updated
     return NextResponse.json(safeUser)

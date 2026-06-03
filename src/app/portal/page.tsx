@@ -13,7 +13,7 @@ export default async function PortalDashboard() {
   const todayDow = ['SUN','MON','TUE','WED','THU','FRI','SAT'][now.getDay()]
 
   const children = await prisma.student.findMany({
-    where: { parentId: userId },
+    where: { parentId: userId, status: { not: 'DELETED_BY_PARENT' } },
     include: {
       trainingGroup: { include: { schedules: true, coach: { select: { name: true } }, paymentPlan: true } },
       payments: { where: { paymentMonth: currentMonth }, take: 1 },

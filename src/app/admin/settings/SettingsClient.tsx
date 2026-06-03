@@ -9,7 +9,41 @@ interface Props { settings: any; coaches: any[] }
 export default function SettingsClient({ settings: initial, coaches }: Props) {
   const [form, setForm] = useState(initial)
   const [saving, setSaving] = useState(false)
+  const [testEmail, setTestEmail] = useState('')
+  const [sendingTest, setSendingTest] = useState(false)
   const set = (k: string, v: any) => setForm((f: any) => ({ ...f, [k]: v }))
+
+  async function handleSendTestEmail() {
+    if (!testEmail) {
+      toast.error('Please enter a recipient email.')
+      return
+    }
+    setSendingTest(true)
+    try {
+      const res = await fetch('/api/settings/test-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          toEmail: testEmail,
+          smtpHost: form.smtpHost,
+          smtpPort: form.smtpPort,
+          smtpUser: form.smtpUser,
+          smtpPassword: form.smtpPassword,
+          smtpFromName: form.smtpFromName,
+        })
+      })
+      const data = await res.json()
+      if (res.ok && data.success) {
+        toast.success('Test email sent successfully! Check your inbox.')
+      } else {
+        toast.error(data.error || 'Failed to send test email. Please check your SMTP settings.')
+      }
+    } catch {
+      toast.error('Network error. Failed to connect to verification API.')
+    } finally {
+      setSendingTest(false)
+    }
+  }
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
@@ -90,6 +124,33 @@ export default function SettingsClient({ settings: initial, coaches }: Props) {
           </div>
           <div className="alert alert-orange">
             ⚠️ For Gmail: enable 2FA and generate an App Password at myaccount.google.com/apppasswords
+          </div>
+          
+          <hr style={{ margin: '1.5rem 0', borderColor: 'var(--border)', opacity: 0.5 }} />
+          <h4 style={{ fontWeight: 700, marginBottom: '0.5rem', fontSize: '0.875rem' }}>🔌 Verify SMTP Settings</h4>
+          <p style={{ color: '#8B8BA7', fontSize: '0.75rem', marginBottom: '0.75rem' }}>
+            Send a real test email to verify credentials before saving settings.
+          </p>
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+            <div className="form-group" style={{ flex: 1, minWidth: 220, marginBottom: 0 }}>
+              <label className="form-label" style={{ fontSize: '0.7rem' }}>Test Recipient Email Address</label>
+              <input 
+                className="input" 
+                type="email" 
+                placeholder="recipient@example.com" 
+                value={testEmail} 
+                onChange={e => setTestEmail(e.target.value)} 
+              />
+            </div>
+            <button 
+              type="button" 
+              className="btn-secondary" 
+              disabled={sendingTest || !testEmail} 
+              onClick={handleSendTestEmail}
+              style={{ padding: '0.625rem 1rem' }}
+            >
+              {sendingTest ? 'Sending...' : 'Send Test Email'}
+            </button>
           </div>
         </div>
 

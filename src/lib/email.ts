@@ -156,3 +156,115 @@ export async function sendSlipUploadNotification(
     return { success: false, error: String(error) }
   }
 }
+
+export async function sendPasswordResetEmail(
+  email: string,
+  name: string,
+  role: string,
+  newPassword?: string
+) {
+  try {
+    const { transport, from } = await getEmailTransport()
+    const settings = await prisma.clubSettings.findFirst()
+    const clubName = settings?.clubName || 'Basketball Club'
+
+    await transport.sendMail({
+      from,
+      to: email,
+      subject: `🔑 Password Updated - ${clubName}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #1A1A2E; color: #ffffff; border-radius: 12px; overflow: hidden;">
+          <div style="background: linear-gradient(135deg, #4f46e5, #6366f1); padding: 30px; text-align: center;">
+            <h1 style="margin: 0; font-size: 24px;">🔑 Password Updated</h1>
+            <p style="margin: 8px 0 0; opacity: 0.9;">${clubName}</p>
+          </div>
+          <div style="padding: 30px;">
+            <p style="color: #ccc;">Dear ${name},</p>
+            <p style="color: #ccc;">The password for your account has been updated by an administrator.</p>
+            <div style="background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.3); border-radius: 8px; padding: 20px; margin: 20px 0;">
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr><td style="color: #888; padding: 6px 0;">Username/Email:</td><td style="color: #fff; text-align: right; font-weight: bold;">${email}</td></tr>
+                <tr><td style="color: #888; padding: 6px 0;">Account Role:</td><td style="color: #fff; text-align: right;">${role}</td></tr>
+                ${newPassword ? `<tr><td style="color: #888; padding: 6px 0;">New Password:</td><td style="color: #FF6B00; text-align: right; font-weight: bold; font-size: 16px;">${newPassword}</td></tr>` : ''}
+              </table>
+            </div>
+            <p style="color: #ccc;">Please log in to the portal to access your account. If you did not request this change, please contact the administrator immediately.</p>
+            <p style="color: #888; font-size: 12px; margin-top: 30px;">This is an automated message from ${clubName} CRM.</p>
+          </div>
+        </div>
+      `,
+    })
+    return { success: true }
+  } catch (error) {
+    console.error('Email send error:', error)
+    return { success: false, error: String(error) }
+  }
+}
+
+export async function sendTestEmail(
+  toEmail: string,
+  config?: {
+    smtpHost?: string
+    smtpPort?: number
+    smtpUser?: string
+    smtpPassword?: string
+    smtpFromName?: string
+  }
+) {
+  try {
+    let host = config?.smtpHost
+    let port = config?.smtpPort ? parseInt(String(config.smtpPort)) : undefined
+    let user = config?.smtpUser
+    let pass = config?.smtpPassword
+    let fromName = config?.smtpFromName
+
+    if (!host || !user) {
+      const settings = await prisma.clubSettings.findFirst()
+      host = host || settings?.smtpHost || process.env.SMTP_HOST || 'smtp.gmail.com'
+      port = port || settings?.smtpPort || parseInt(process.env.SMTP_PORT || '587')
+      user = user || settings?.smtpUser || process.env.SMTP_USER || ''
+      pass = pass || settings?.smtpPassword || process.env.SMTP_PASSWORD || ''
+      fromName = fromName || settings?.smtpFromName || process.env.SMTP_FROM_NAME || 'Basketball Club CRM'
+    }
+
+    const transport = nodemailer.createTransport({
+      host,
+      port,
+      secure: port === 465,
+      auth: user ? { user, pass } : undefined,
+    })
+
+    const from = `"${fromName}" <${user}>`
+
+    await transport.sendMail({
+      from,
+      to: toEmail,
+      subject: `🏀 Test Email - Basketball Club CRM`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #1A1A2E; color: #ffffff; border-radius: 12px; overflow: hidden;">
+          <div style="background: linear-gradient(135deg, #FF6B00, #FF8C42); padding: 30px; text-align: center;">
+            <h1 style="margin: 0; font-size: 24px;">🏀 Test Connection</h1>
+            <p style="margin: 8px 0 0; opacity: 0.9;">SMTP Verification</p>
+          </div>
+          <div style="padding: 30px;">
+            <p style="color: #ccc;">Hello,</p>
+            <p style="color: #ccc;">This is a test email sent from the <strong>Basketball Club CRM</strong> application.</p>
+            <p style="color: #ccc;">If you are reading this message, your SMTP configuration is correct and emails are working properly!</p>
+            <div style="background: rgba(255,107,0,0.1); border: 1px solid rgba(255,107,0,0.3); border-radius: 8px; padding: 20px; margin: 20px 0;">
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr><td style="color: #888; padding: 6px 0;">SMTP Host:</td><td style="color: #fff; text-align: right;">${host}</td></tr>
+                <tr><td style="color: #888; padding: 6px 0;">SMTP Port:</td><td style="color: #fff; text-align: right;">${port}</td></tr>
+                <tr><td style="color: #888; padding: 6px 0;">SMTP User:</td><td style="color: #fff; text-align: right;">${user}</td></tr>
+              </table>
+            </div>
+            <p style="color: #888; font-size: 12px; margin-top: 30px;">Sent at: ${new Date().toLocaleString()}</p>
+          </div>
+        </div>
+      `,
+    })
+    return { success: true }
+  } catch (error) {
+    console.error('Test email send error:', error)
+    return { success: false, error: String(error) }
+  }
+}
