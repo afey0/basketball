@@ -1,0 +1,162 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  phone     String?
+  role      String   @default("PARENT") // ADMIN, COACH, PARENT
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  coachGroups      TrainingGroup[]  @relation("CoachGroups")
+  parentStudents   Student[]        @relation("ParentStudents")
+  markedAttendance Attendance[]     @relation("MarkedBy")
+  recordedPayments Payment[]        @relation("RecordedBy")
+}
+
+model Student {
+  id              Int      @id @default(autoincrement())
+  firstName       String
+  lastName        String
+  dateOfBirth     DateTime
+  age             Int?
+  gender          String   // MALE, FEMALE
+  ageGroup        String   // U-8, U-10, U-12, U-14, U-16, U-18
+  profilePhoto    String?
+  jerseyNumber    Int?
+  medicalNotes    String?
+  enrollmentDate  DateTime @default(now())
+  status          String   @default("ACTIVE") // ACTIVE, INACTIVE, SUSPENDED
+  createdAt       DateTime @default(now())
+
+  // Foreign keys
+  trainingGroupId Int?
+  parentId        Int?
+
+  // Relations
+  trainingGroup TrainingGroup? @relation(fields: [trainingGroupId], references: [id])
+  parent        User?          @relation("ParentStudents", fields: [parentId], references: [id])
+  attendance    Attendance[]
+  payments      Payment[]
+}
+
+model TrainingGroup {
+  id          Int      @id @default(autoincrement())
+  groupName   String
+  ageGroup    String
+  maxCapacity Int      @default(20)
+  description String?
+  createdAt   DateTime @default(now())
+
+  // Foreign keys
+  coachId Int?
+
+  // Relations
+  coach       User?         @relation("CoachGroups", fields: [coachId], references: [id])
+  students    Student[]
+  schedules   Schedule[]
+  attendance  Attendance[]
+  paymentPlan PaymentPlan?
+}
+
+model Schedule {
+  id            Int      @id @default(autoincrement())
+  dayOfWeek     String   // MON, TUE, WED, THU, FRI, SAT, SUN
+  startTime     String   // e.g., "16:00"
+  endTime       String   // e.g., "17:30"
+  location      String
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  // Foreign keys
+  trainingGroupId Int
+
+  // Relations
+  trainingGroup TrainingGroup @relation(fields: [trainingGroupId], references: [id], onDelete: Cascade)
+}
+
+model Attendance {
+  id        Int      @id @default(autoincrement())
+  date      DateTime
+  status    String   // PRESENT, ABSENT, LATE, EXCUSED
+  notes     String?
+  createdAt DateTime @default(now())
+
+  // Foreign keys
+  studentId       Int
+  trainingGroupId Int
+  markedById      Int?
+
+  // Relations
+  student       Student       @relation(fields: [studentId], references: [id])
+  trainingGroup TrainingGroup @relation(fields: [trainingGroupId], references: [id])
+  markedBy      User?         @relation("MarkedBy", fields: [markedById], references: [id])
+
+  @@unique([studentId, date, trainingGroupId])
+}
+
+model Payment {
+  id            Int      @id @default(autoincrement())
+  amount        Float
+  currency      String   @default("MVR")
+  paymentMonth  String   // YYYY-MM format
+  paymentDate   DateTime?
+  dueDate       DateTime
+  status        String   @default("UNPAID") // PAID, UNPAID, OVERDUE, PARTIAL
+  paymentMethod String?  // CASH, BANK_TRANSFER, ONLINE
+  receiptNumber String?
+  notes         String?
+  slipUrl       String?
+  rejectionReason String?
+  createdAt     DateTime @default(now())
+
+  // Foreign keys
+  studentId    Int
+  recordedById Int?
+
+  // Relations
+  student    Student @relation(fields: [studentId], references: [id])
+  recordedBy User?   @relation("RecordedBy", fields: [recordedById], references: [id])
+}
+
+model PaymentPlan {
+  id         Int   @id @default(autoincrement())
+  monthlyFee Float
+  currency   String @default("MVR")
+
+  // Foreign keys
+  trainingGroupId Int @unique
+
+  // Relations
+  trainingGroup TrainingGroup @relation(fields: [trainingGroupId], references: [id], onDelete: Cascade)
+}
+
+model ClubSettings {
+  id              Int    @id @default(autoincrement())
+  clubName        String @default("Basketball Training Club")
+  clubLogo        String?
+  contactEmail    String?
+  contactPhone    String?
+  address         String?
+  paymentDueDay   Int    @default(5) // Day of month payment is due
+  smtpHost        String?
+  smtpPort        Int?
+  smtpUser        String?
+  smtpPassword    String?
+  smtpFromName    String?
+  currency        String @default("MVR")
+  updatedAt       DateTime @updatedAt
+}

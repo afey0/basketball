@@ -1,0 +1,86 @@
+import { clsx, type ClassValue } from 'clsx'
+import { twMerge } from 'tailwind-merge'
+import { format, parseISO } from 'date-fns'
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+
+export function formatCurrency(amount: number, currency = 'MVR') {
+  return `${currency} ${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+}
+
+export function formatDate(date: string | Date | null | undefined) {
+  if (!date) return '—'
+  try {
+    const d = typeof date === 'string' ? parseISO(date) : date
+    return format(d, 'dd MMM yyyy')
+  } catch {
+    return '—'
+  }
+}
+
+export function formatMonth(yearMonth: string) {
+  // "2026-06" → "June 2026"
+  try {
+    const [yr, mo] = yearMonth.split('-').map(Number)
+    return format(new Date(yr, mo - 1, 1), 'MMMM yyyy')
+  } catch {
+    return yearMonth
+  }
+}
+
+export function calculateAge(dateOfBirth: string | Date): number {
+  const dob = typeof dateOfBirth === 'string' ? new Date(dateOfBirth) : dateOfBirth
+  const today = new Date()
+  let age = today.getFullYear() - dob.getFullYear()
+  const m = today.getMonth() - dob.getMonth()
+  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--
+  return age
+}
+
+export function suggestAgeGroup(age: number): string {
+  if (age <= 8) return 'U-8'
+  if (age <= 10) return 'U-10'
+  if (age <= 12) return 'U-12'
+  if (age <= 14) return 'U-14'
+  if (age <= 16) return 'U-16'
+  return 'U-18'
+}
+
+export function getCurrentMonth(): string {
+  const now = new Date()
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+}
+
+export function getStatusColor(status: string): string {
+  const map: Record<string, string> = {
+    PAID: 'text-green-400 bg-green-400/10 border-green-400/20',
+    UNPAID: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20',
+    OVERDUE: 'text-red-400 bg-red-400/10 border-red-400/20',
+    PARTIAL: 'text-orange-400 bg-orange-400/10 border-orange-400/20',
+    PRESENT: 'text-green-400 bg-green-400/10 border-green-400/20',
+    ABSENT: 'text-red-400 bg-red-400/10 border-red-400/20',
+    LATE: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20',
+    EXCUSED: 'text-blue-400 bg-blue-400/10 border-blue-400/20',
+    ACTIVE: 'text-green-400 bg-green-400/10 border-green-400/20',
+    INACTIVE: 'text-gray-400 bg-gray-400/10 border-gray-400/20',
+    SUSPENDED: 'text-red-400 bg-red-400/10 border-red-400/20',
+  }
+  return map[status] || 'text-gray-400 bg-gray-400/10 border-gray-400/20'
+}
+
+export function generateReceiptNumber(studentId: number, month: string): string {
+  return `RCP-${month.replace('-', '')}-${String(studentId).padStart(3, '0')}`
+}
+
+export const DAY_ORDER: Record<string, number> = {
+  MON: 0, TUE: 1, WED: 2, THU: 3, FRI: 4, SAT: 5, SUN: 6,
+}
+
+export const DAY_LABELS: Record<string, string> = {
+  MON: 'Monday', TUE: 'Tuesday', WED: 'Wednesday',
+  THU: 'Thursday', FRI: 'Friday', SAT: 'Saturday', SUN: 'Sunday',
+}
+
+export const AGE_GROUPS = ['U-8', 'U-10', 'U-12', 'U-14', 'U-16', 'U-18']
