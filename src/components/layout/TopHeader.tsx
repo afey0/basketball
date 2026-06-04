@@ -48,7 +48,7 @@ export default function TopHeader({ title, subtitle }: TopHeaderProps) {
         </button>
 
         <style dangerouslySetInnerHTML={{ __html: `
-          @media (max-width: 480px) {
+          @media (max-width: 768px) {
             .admin-user-info {
               display: none !important;
             }
