@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { Edit, Mail, Phone, Calendar, CreditCard, CheckSquare, User, AlertCircle } from 'lucide-react'
+import { Edit, Mail, Phone, Calendar, CreditCard, CheckSquare, User, AlertCircle, FileText } from 'lucide-react'
 import { formatDate, formatCurrency, formatMonth, calculateAge, getStatusColor } from '@/lib/utils'
 import { StudentModal } from '../StudentsClient'
 
@@ -237,7 +237,19 @@ export default function StudentDetailClient({ student: initial, groups, parents 
                       {p.status}
                     </span>
                   </td>
-                  <td style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{p.receiptNumber || '—'}</td>
+                  <td style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    <div>{p.receiptNumber || '—'}</div>
+                    {p.slipUrl && (
+                      <a 
+                        href={p.slipUrl} 
+                        target="_blank" 
+                        rel="noreferrer" 
+                        style={{ color: 'var(--brand)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.25rem', marginTop: '0.25rem' }}
+                      >
+                        <FileText size={10} /> View Slip
+                      </a>
+                    )}
+                  </td>
                 </tr>
               ))}
               {student.payments.length === 0 && (

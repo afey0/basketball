@@ -232,6 +232,16 @@ export default function PaymentsClient({ payments: initial, groups, settings, cu
                         onClick={() => { setSelectedPayment(p); setShowPayModal(true) }}>
                         <CheckCircle2 size={12} /> Record
                       </button>
+                    ) : p.slipUrl ? (
+                      <a 
+                        href={p.slipUrl} 
+                        target="_blank" 
+                        rel="noreferrer" 
+                        className="btn-secondary" 
+                        style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+                      >
+                        <FileText size={12} /> View Slip
+                      </a>
                     ) : null}
                     {p.status !== 'PAID' && p.status !== 'PENDING' && (
                       <button className="btn-ghost" style={{ padding: '0.3rem 0.5rem' }}
