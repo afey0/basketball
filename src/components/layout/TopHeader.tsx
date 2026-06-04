@@ -1,7 +1,7 @@
 'use client'
 
-import { useSession } from 'next-auth/react'
-import { Bell, Menu } from 'lucide-react'
+import { useSession, signOut } from 'next-auth/react'
+import { Bell, Menu, LogOut } from 'lucide-react'
 
 interface TopHeaderProps {
   title: string
@@ -41,18 +41,38 @@ export default function TopHeader({ title, subtitle }: TopHeaderProps) {
           <Bell size={18} />
         </button>
 
+        <style dangerouslySetInnerHTML={{ __html: `
+          @media (max-width: 480px) {
+            .admin-user-info {
+              display: none !important;
+            }
+          }
+        `}} />
+
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
           <div className="avatar" style={{ width: 34, height: 34, fontSize: '0.8rem' }}>
             {initials}
           </div>
-          <div style={{ lineHeight: 1.3 }}>
+          <div className="admin-user-info" style={{ lineHeight: 1.3 }}>
             <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text)' }}>{user?.name || 'Admin'}</div>
             <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>
               {user?.role?.toLowerCase() || 'admin'}
             </div>
           </div>
+          <button
+            onClick={() => signOut({ callbackUrl: '/auth/login' })}
+            title="Sign out"
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              color: 'var(--text-muted)', padding: '0.25rem', display: 'flex', alignItems: 'center',
+              marginLeft: '0.25rem'
+            }}
+          >
+            <LogOut size={16} />
+          </button>
         </div>
       </div>
     </header>
   )
 }
+
