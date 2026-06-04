@@ -61,14 +61,6 @@ export default function TopHeader({ title, subtitle }: TopHeaderProps) {
                 {userRole.toLowerCase()}
               </div>
             </div>
-            <button
-              onClick={() => signOut({ callbackUrl: '/auth/login' })}
-              title="Sign out"
-              className="admin-signout-btn"
-            >
-              <LogOut size={14} />
-              <span className="admin-signout-label">Sign Out</span>
-            </button>
           </div>
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
@@ -77,12 +69,17 @@ export default function TopHeader({ title, subtitle }: TopHeaderProps) {
               <div className="skeleton" style={{ width: 55, height: 10 }} />
               <div className="skeleton" style={{ width: 40, height: 8 }} />
             </div>
-            <div className="admin-signout-btn skeleton" style={{ width: 78, height: 28, display: 'flex', alignItems: 'center', border: 'none', background: 'none' }}>
-              <div style={{ width: 14, height: 14, borderRadius: 2 }} />
-              <span className="admin-signout-label" style={{ width: 42, height: 10, marginLeft: '0.35rem', display: 'inline-block' }} />
-            </div>
           </div>
         )}
+
+        <button
+          onClick={() => signOut({ callbackUrl: '/auth/login' })}
+          title="Sign out"
+          className="btn-ghost"
+          style={{ padding: '0.5rem', borderRadius: '8px' }}
+        >
+          <LogOut size={18} />
+        </button>
       </div>
     </header>
   )
