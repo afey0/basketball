@@ -3,10 +3,9 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { signOut } from 'next-auth/react'
 import {
   LayoutDashboard, Users, UserCheck, Trophy, Calendar,
-  CheckSquare, CreditCard, Settings, LogOut,
+  CheckSquare, CreditCard, Settings,
   ChevronRight, X
 } from 'lucide-react'
 
@@ -119,17 +118,6 @@ export default function AdminSidebar() {
           ))}
         </nav>
 
-        {/* Footer */}
-        <div style={{ padding: '1rem', borderTop: '1px solid var(--border)' }}>
-          <button
-            onClick={() => signOut({ callbackUrl: '/auth/login' })}
-            className="sidebar-link"
-            style={{ width: '100%' }}
-          >
-            <LogOut size={17} />
-            <span>Sign Out</span>
-          </button>
-        </div>
       </aside>
     </>
   )
