@@ -637,12 +637,36 @@ body {
 .empty-state-icon { font-size: 3rem; margin-bottom: 1rem; }
 .empty-state-title { font-size: 1rem; font-weight: 600; color: var(--text); margin-bottom: 0.25rem; }
 
-/* Admin Header Compact Rules */
+/* Admin Sign Out Button */
+.admin-signout-btn {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  cursor: pointer;
+  color: #dc2626;
+  padding: 0.35rem 0.65rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-left: 0.25rem;
+  transition: all 0.2s;
+}
+.admin-signout-btn:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
 @media (max-width: 768px) {
   .admin-user-info {
     display: none !important;
   }
+  .admin-signout-label {
+    display: none;
+  }
 }
+
 
 /* Parent Portal Header Compact Rules */
 @media (max-width: 640px) {
