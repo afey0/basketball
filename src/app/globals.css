@@ -636,3 +636,36 @@ body {
 }
 .empty-state-icon { font-size: 3rem; margin-bottom: 1rem; }
 .empty-state-title { font-size: 1rem; font-weight: 600; color: var(--text); margin-bottom: 0.25rem; }
+
+/* Admin Header Compact Rules */
+@media (max-width: 768px) {
+  .admin-user-info {
+    display: none !important;
+  }
+}
+
+/* Parent Portal Header Compact Rules */
+@media (max-width: 640px) {
+  .portal-header {
+    padding: 0 0.75rem !important;
+    gap: 0.5rem !important;
+    height: 56px !important;
+  }
+  .portal-logo-text, .portal-nav-label, .portal-user-name {
+    display: none !important;
+  }
+  .portal-nav-link {
+    padding: 0.4rem 0.5rem !important;
+    font-size: 1.15rem !important;
+  }
+  .portal-user-section {
+    gap: 0.35rem !important;
+  }
+}
+
+/* PWA Install Banner Slide Up Animation */
+@keyframes slideUpBanner {
+  from { transform: translate(-50%, 100%); opacity: 0; }
+  to { transform: translate(-50%, 0); opacity: 1; }
+}
+

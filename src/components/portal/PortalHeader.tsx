@@ -30,31 +30,6 @@ export default function PortalHeader({ user }: { user: any }) {
       top: 0,
       zIndex: 40,
     }}>
-      <style dangerouslySetInnerHTML={{ __html: `
-        @media (max-width: 640px) {
-          .portal-header {
-            padding: 0 0.75rem !important;
-            gap: 0.5rem !important;
-            height: 56px !important;
-          }
-          .portal-logo-text {
-            display: none !important;
-          }
-          .portal-nav-label {
-            display: none !important;
-          }
-          .portal-nav-link {
-            padding: 0.4rem 0.5rem !important;
-            font-size: 1.15rem !important; /* Make emoji slightly larger for easier tapping */
-          }
-          .portal-user-name {
-            display: none !important;
-          }
-          .portal-user-section {
-            gap: 0.35rem !important;
-          }
-        }
-      `}} />
 
       {/* Logo */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginRight: '0.25rem' }}>

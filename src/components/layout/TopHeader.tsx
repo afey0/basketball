@@ -47,14 +47,6 @@ export default function TopHeader({ title, subtitle }: TopHeaderProps) {
           <Bell size={18} />
         </button>
 
-        <style dangerouslySetInnerHTML={{ __html: `
-          @media (max-width: 768px) {
-            .admin-user-info {
-              display: none !important;
-            }
-          }
-        `}} />
-
         {mounted && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
             <div className="avatar" style={{ width: 34, height: 34, fontSize: '0.8rem' }}>

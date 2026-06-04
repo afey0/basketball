@@ -77,14 +77,8 @@ export default function PwaInstallBanner() {
       alignItems: 'center',
       gap: '1rem',
       zIndex: 100,
-      animation: 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+      animation: 'slideUpBanner 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
     }}>
-      <style dangerouslySetInnerHTML={{__html: `
-        @keyframes slideUp {
-          from { transform: translate(-50%, 100%); opacity: 0; }
-          to { transform: translate(-50%, 0); opacity: 1; }
-        }
-      `}} />
       
       {/* Icon */}
       <div style={{
