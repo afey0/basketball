@@ -2,6 +2,7 @@ import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
 import SessionProvider from '@/components/providers/SessionProvider'
 import PortalHeader from '@/components/portal/PortalHeader'
+import PwaInstallBanner from '@/components/portal/PwaInstallBanner'
 
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
   const session = await auth()
@@ -16,7 +17,9 @@ export default async function PortalLayout({ children }: { children: React.React
         <main style={{ maxWidth: 960, margin: '0 auto', padding: '1.5rem 2rem' }}>
           {children}
         </main>
+        <PwaInstallBanner />
       </div>
     </SessionProvider>
   )
 }
+

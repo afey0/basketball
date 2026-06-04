@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Offline · Maldives Basketball Club</title>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+  <style>
+    :root {
+      --background: #0f172a;
+      --surface: #1e293b;
+      --brand: #ff6b00;
+      --brand-hover: #e05e00;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: #334155;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--background);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 450px;
+      background-color: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 3rem 2rem;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .icon-wrapper {
+      position: relative;
+      margin-bottom: 2rem;
+    }
+
+    .basketball {
+      font-size: 5rem;
+      display: inline-block;
+      animation: pulse 2s infinite ease-in-out;
+    }
+
+    .offline-badge {
+      position: absolute;
+      bottom: -5px;
+      right: -5px;
+      background-color: #ef4444;
+      color: white;
+      font-size: 0.75rem;
+      font-weight: bold;
+      padding: 4px 8px;
+      border-radius: 20px;
+      border: 3px solid var(--surface);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 800;
+      margin-bottom: 0.75rem;
+      letter-spacing: -0.025em;
+      color: var(--text);
+    }
+
+    p {
+      font-size: 0.95rem;
+      line-height: 1.5;
+      color: var(--text-muted);
+      margin-bottom: 2.25rem;
+    }
+
+    .btn-retry {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background-color: var(--brand);
+      color: white;
+      font-weight: 600;
+      font-size: 0.95rem;
+      padding: 0.75rem 2rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s ease-in-out;
+      width: 100%;
+      box-shadow: 0 4px 14px rgba(255, 107, 0, 0.3);
+    }
+
+    .btn-retry:hover {
+      background-color: var(--brand-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 107, 0, 0.4);
+    }
+
+    .btn-retry:active {
+      transform: translateY(0);
+    }
+
+    .status-text {
+      margin-top: 1.5rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+        filter: drop-shadow(0 0 0px rgba(255,107,0,0));
+      }
+      50% {
+        transform: scale(1.08);
+        filter: drop-shadow(0 0 15px rgba(255,107,0,0.6));
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon-wrapper">
+      <span class="basketball">🏀</span>
+      <div class="offline-badge">Offline</div>
+    </div>
+    <h1>No Internet Connection</h1>
+    <p>It looks like you're currently offline. The Maldives Basketball Club CRM requires a connection to load fresh student profiles, attendance, or payment data.</p>
+    <button class="btn-retry" onclick="window.location.reload()">Retry Connection</button>
+    <div class="status-text">MBC CRM Standalone App</div>
+  </div>
+</body>
+</html>
