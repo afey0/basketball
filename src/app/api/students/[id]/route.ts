@@ -30,7 +30,21 @@ export async function PUT(req: NextRequest, props: { params: Promise<{ id: strin
   const body = await req.json()
 
   const dob = body.dateOfBirth ? new Date(body.dateOfBirth) : undefined
+  if (dob && isNaN(dob.getTime())) {
+    return NextResponse.json({ error: 'Invalid Date of Birth' }, { status: 400 })
+  }
+  if (dob) {
+    const today = new Date()
+    today.setHours(23, 59, 59, 999)
+    if (dob > today) {
+      return NextResponse.json({ error: 'Date of Birth cannot be in the future' }, { status: 400 })
+    }
+  }
   const age = dob ? new Date().getFullYear() - dob.getFullYear() : undefined
+
+  if (body.parentId !== undefined && !body.parentId) {
+    return NextResponse.json({ error: 'Parent / Guardian is required' }, { status: 400 })
+  }
 
   const student = await prisma.student.update({
     where: { id },
@@ -41,13 +55,24 @@ export async function PUT(req: NextRequest, props: { params: Promise<{ id: strin
       ...(body.gender && { gender: body.gender }),
       ...(body.ageGroup && { ageGroup: body.ageGroup }),
       ...(body.trainingGroupId !== undefined && { trainingGroupId: body.trainingGroupId || null }),
-      ...(body.parentId !== undefined && { parentId: body.parentId || null }),
+      ...(body.parentId !== undefined && { parentId: body.parentId }),
       ...(body.jerseyNumber !== undefined && { jerseyNumber: body.jerseyNumber || null }),
       ...(body.medicalNotes !== undefined && { medicalNotes: body.medicalNotes }),
       ...(body.status && { status: body.status }),
       ...(body.profilePhoto !== undefined && { profilePhoto: body.profilePhoto }),
     },
-    include: { trainingGroup: true, parent: true },
+    include: {
+      trainingGroup: {
+        include: {
+          schedules: true,
+          coach: { select: { name: true, email: true } },
+          paymentPlan: true,
+        },
+      },
+      parent: { select: { id: true, name: true, email: true, phone: true } },
+      payments: { orderBy: { paymentMonth: 'desc' } },
+      attendance: { orderBy: { date: 'desc' }, take: 90 },
+    },
   })
   return NextResponse.json(student)
 }

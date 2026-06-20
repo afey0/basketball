@@ -244,7 +244,7 @@ function AddUserModal({ onClose, onSave }: any) {
             </div>
             <div className="form-group">
               <label className="form-label">Phone Number</label>
-              <input className="input" value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="+960 ..." />
+              <input className="input" value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="e.g. 9607771234" pattern="[0-9]*" title="Phone number must contain only digits" />
             </div>
             <div className="form-group">
               <label className="form-label">User Role *</label>
@@ -324,7 +324,7 @@ function EditUserModal({ user, currentUserId, onClose, onSave }: any) {
             </div>
             <div className="form-group">
               <label className="form-label">Phone Number</label>
-              <input className="input" value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="+960 ..." />
+              <input className="input" value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="e.g. 9607771234" pattern="[0-9]*" title="Phone number must contain only digits" />
             </div>
             <div className="form-group">
               <label className="form-label">User Role *</label>

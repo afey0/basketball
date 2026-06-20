@@ -88,6 +88,11 @@ async function run() {
       fail('Upload API: Request failed', `status: ${uploadRes.status}`)
     }
 
+    // Fetch first parent for linking
+    const parentsRes = await fetch(`${BASE}/api/parents`, { headers: { Cookie: adminCookie } })
+    const parents = await parentsRes.json()
+    const firstParentId = parents?.[0]?.id || 1
+
     // 3. Test Student create and update with profilePhoto
     const studentRes = await fetch(`${BASE}/api/students`, {
       method: 'POST',
@@ -98,6 +103,7 @@ async function run() {
         dateOfBirth: '2016-08-12',
         gender: 'MALE',
         ageGroup: 'U-10',
+        parentId: firstParentId,
         profilePhoto: uploadedUrl,
       })
     })
@@ -151,13 +157,13 @@ async function run() {
         body: JSON.stringify({
           name: 'Aminath Saeed (Updated)',
           email: 'aminath@gmail.com',
-          phone: '+9609999999',
+          phone: '9609999999',
         })
       })
 
       if (parentEditRes.status === 200) {
         const updatedParent = await parentEditRes.json()
-        if (updatedParent.name === 'Aminath Saeed (Updated)' && updatedParent.phone === '+9609999999') {
+        if (updatedParent.name === 'Aminath Saeed (Updated)' && updatedParent.phone === '9609999999') {
           pass('Parent Edit: Details updated successfully')
         } else {
           fail('Parent Edit: Details mismatch', JSON.stringify(updatedParent))
@@ -167,7 +173,7 @@ async function run() {
         await fetch(`${BASE}/api/parents/${targetParent.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json', Cookie: adminCookie },
-          body: JSON.stringify({ name: origName, email: 'aminath@gmail.com', phone: targetParent.phone || '' })
+          body: JSON.stringify({ name: origName, email: 'aminath@gmail.com', phone: (targetParent.phone || '').replace(/\D/g, '') })
         })
       } else {
         fail('Parent Edit: API failed', `status: ${parentEditRes.status}`)
@@ -184,7 +190,7 @@ async function run() {
       body: JSON.stringify({
         name: 'Integration Coach',
         email: 'intcoach@mbc.mv',
-        phone: '+9607777777',
+        phone: '9607777777',
         password: 'coachpassword123',
         role: 'COACH',
       })

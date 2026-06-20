@@ -98,10 +98,10 @@ export default async function PortalDashboard() {
             </div>
 
             <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.75rem', flexWrap: 'wrap' }}>
-              <Link href="/portal/payments" className="btn-secondary" style={{ fontSize: '0.8rem' }}>💰 View Payments</Link>
-              <Link href="/portal/attendance" className="btn-secondary" style={{ fontSize: '0.8rem' }}>✅ View Attendance</Link>
-              <Link href="/portal/schedule" className="btn-secondary" style={{ fontSize: '0.8rem' }}>📅 View Schedule</Link>
-              <Link href="/portal/profile" className="btn-secondary" style={{ fontSize: '0.8rem' }}>👦 Profile</Link>
+              <Link href={`/portal/payments?studentId=${child.id}`} className="btn-secondary" style={{ fontSize: '0.8rem' }}>💰 View Payments</Link>
+              <Link href={`/portal/attendance?studentId=${child.id}`} className="btn-secondary" style={{ fontSize: '0.8rem' }}>✅ View Attendance</Link>
+              <Link href={`/portal/schedule?studentId=${child.id}`} className="btn-secondary" style={{ fontSize: '0.8rem' }}>📅 View Schedule</Link>
+              <Link href={`/portal/profile?studentId=${child.id}`} className="btn-secondary" style={{ fontSize: '0.8rem' }}>👦 Profile</Link>
             </div>
           </div>
         )

@@ -1,6 +1,5 @@
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
-import { format, parseISO } from 'date-fns'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -13,10 +12,29 @@ export function formatCurrency(amount: number, currency = 'MVR') {
 export function formatDate(date: string | Date | null | undefined) {
   if (!date) return '—'
   try {
-    const d = typeof date === 'string' ? parseISO(date) : date
-    return format(d, 'dd MMM yyyy')
+    const d = typeof date === 'string' ? new Date(date) : date
+    if (isNaN(d.getTime())) return '—'
+    const day = String(d.getUTCDate()).padStart(2, '0')
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    const month = months[d.getUTCMonth()]
+    const year = d.getUTCFullYear()
+    return `${day} ${month} ${year}`
   } catch {
     return '—'
+  }
+}
+
+export function formatDateForInput(date: string | Date | null | undefined): string {
+  if (!date) return ''
+  try {
+    const d = typeof date === 'string' ? new Date(date) : date
+    if (isNaN(d.getTime())) return ''
+    const year = d.getUTCFullYear()
+    const month = String(d.getUTCMonth() + 1).padStart(2, '0')
+    const day = String(d.getUTCDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  } catch {
+    return ''
   }
 }
 
@@ -24,7 +42,13 @@ export function formatMonth(yearMonth: string) {
   // "2026-06" → "June 2026"
   try {
     const [yr, mo] = yearMonth.split('-').map(Number)
-    return format(new Date(yr, mo - 1, 1), 'MMMM yyyy')
+    const months = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ]
+    const monthName = months[mo - 1]
+    if (!monthName || isNaN(yr)) return yearMonth
+    return `${monthName} ${yr}`
   } catch {
     return yearMonth
   }

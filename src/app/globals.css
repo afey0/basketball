@@ -693,3 +693,52 @@ body {
   to { transform: translate(-50%, 0); opacity: 1; }
 }
 
+/* TopHeader CSS classes to prevent style hydration mismatches */
+.top-header-title-container {
+  flex: 1;
+}
+.top-header-title {
+  font-weight: 800;
+  font-size: 1.125rem;
+  margin: 0;
+  color: var(--text);
+}
+.top-header-subtitle {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+.top-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.top-header-profile {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+.avatar-header {
+  width: 34px !important;
+  height: 34px !important;
+  font-size: 0.8rem !important;
+}
+.top-header-user-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.top-header-user-role {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: capitalize;
+}
+.top-header-btn-icon {
+  padding: 0.5rem !important;
+  border-radius: 8px !important;
+}
+.top-header-menu-btn {
+  margin-right: 0.25rem !important;
+}
+
+

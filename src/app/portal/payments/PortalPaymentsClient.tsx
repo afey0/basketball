@@ -137,27 +137,44 @@ export default function PortalPaymentsClient({ initialChildren }: Props) {
                               href={p.slipUrl} 
                               target="_blank" 
                               rel="noreferrer" 
-                              className="btn-secondary"
-                              style={{ padding: '0.35rem 0.75rem', fontSize: '0.75rem', textDecoration: 'none' }}
+                              style={{ 
+                                display: 'inline-flex', 
+                                alignItems: 'center', 
+                                gap: '0.25rem', 
+                                color: 'var(--brand)', 
+                                fontSize: '0.75rem',
+                                fontWeight: 600,
+                                textDecoration: 'underline'
+                              }}
+                              title="Click to view uploaded slip"
                             >
                               <FileText size={12} /> View Slip
                             </a>
                           )}
                           {p.status === 'PAID' && (
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', color: 'var(--text-muted)', fontSize: '0.75rem', marginRight: '0.25rem' }}>
-                                <Check size={12} style={{ color: '#166534' }} /> {p.receiptNumber || 'Paid'}
-                              </div>
-                              {p.slipUrl && (
+                              {p.slipUrl ? (
                                 <a 
                                   href={p.slipUrl} 
                                   target="_blank" 
                                   rel="noreferrer" 
-                                  className="btn-secondary"
-                                  style={{ padding: '0.35rem 0.75rem', fontSize: '0.75rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+                                  style={{ 
+                                    display: 'inline-flex', 
+                                    alignItems: 'center', 
+                                    gap: '0.25rem', 
+                                    color: 'var(--brand)', 
+                                    fontSize: '0.75rem',
+                                    fontWeight: 600,
+                                    textDecoration: 'underline'
+                                  }}
+                                  title="Click to view payment slip"
                                 >
-                                  <FileText size={12} /> View Slip
+                                  <Check size={12} style={{ color: '#166534' }} /> {p.receiptNumber || 'Paid'}
                                 </a>
+                              ) : (
+                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                                  <Check size={12} style={{ color: '#166534' }} /> {p.receiptNumber || 'Paid'}
+                                </div>
                               )}
                             </div>
                           )}

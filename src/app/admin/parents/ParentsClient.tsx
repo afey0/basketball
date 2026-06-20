@@ -171,8 +171,8 @@ function AddParentModal({ onClose, onSave }: any) {
               <input className="input" type="email" required value={form.email} onChange={e => set('email', e.target.value)} />
             </div>
             <div className="form-group">
-              <label className="form-label">Phone Number</label>
-              <input className="input" value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="+960 ..." />
+              <label className="form-label">Phone Number *</label>
+              <input className="input" required value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="e.g. 9607771234" pattern="[0-9]+" title="Phone number must contain only digits" />
             </div>
             <div className="form-group">
               <label className="form-label">Initial Password</label>
@@ -245,8 +245,8 @@ function EditParentModal({ parent, onClose, onSave }: any) {
               <input className="input" type="email" required value={form.email} onChange={e => set('email', e.target.value)} />
             </div>
             <div className="form-group">
-              <label className="form-label">Phone Number</label>
-              <input className="input" value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="+960 ..." />
+              <label className="form-label">Phone Number *</label>
+              <input className="input" required value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="e.g. 9607771234" pattern="[0-9]+" title="Phone number must contain only digits" />
             </div>
             <div className="form-group">
               <label className="form-label">Change Password (leave blank to keep current)</label>

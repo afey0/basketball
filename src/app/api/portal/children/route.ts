@@ -12,6 +12,7 @@ const childSchema = z.object({
   jerseyNumber: z.number().optional().nullable(),
   medicalNotes: z.string().optional().nullable(),
   profilePhoto: z.string().optional().nullable(),
+  idCardUrl: z.string().optional().nullable(),
   confirmRestore: z.boolean().optional(),
   forceCreate: z.boolean().optional(),
 })
@@ -74,6 +75,14 @@ export async function POST(req: NextRequest) {
     }
 
     const dob = new Date(data.dateOfBirth)
+    if (isNaN(dob.getTime())) {
+      return NextResponse.json({ error: 'Invalid Date of Birth' }, { status: 400 })
+    }
+    const today = new Date()
+    today.setHours(23, 59, 59, 999)
+    if (dob > today) {
+      return NextResponse.json({ error: 'Date of Birth cannot be in the future' }, { status: 400 })
+    }
     const age = new Date().getFullYear() - dob.getFullYear()
 
     if (duplicate && data.confirmRestore) {
@@ -89,6 +98,7 @@ export async function POST(req: NextRequest) {
           jerseyNumber: data.jerseyNumber || null,
           medicalNotes: data.medicalNotes || null,
           profilePhoto: data.profilePhoto || null,
+          idCardUrl: data.idCardUrl || null,
         },
         include: { trainingGroup: true }
       })
@@ -107,6 +117,7 @@ export async function POST(req: NextRequest) {
         jerseyNumber: data.jerseyNumber || null,
         medicalNotes: data.medicalNotes || null,
         profilePhoto: data.profilePhoto || null,
+        idCardUrl: data.idCardUrl || null,
         parentId: userId,
         status: 'ACTIVE',
         enrollmentDate: new Date(),

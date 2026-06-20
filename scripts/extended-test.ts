@@ -154,7 +154,7 @@ async function run() {
   const { data: existingParents } = await req('GET', '/api/parents')
   if (existingParents?.[0]?.email) {
     const { status: dupEmail } = await req('POST', '/api/parents', {
-      name: 'Dup', email: existingParents[0].email, password: 'test123'
+      name: 'Dup', email: existingParents[0].email, phone: '9609998888', password: 'test123'
     })
     dupEmail === 400 ? pass('Duplicate parent email → 400') : fail('Duplicate parent email → 400', `got ${dupEmail}`)
   }
@@ -209,6 +209,10 @@ async function run() {
   const groupWithPlan = allGroups?.find((g: any) => g.paymentPlan?.monthlyFee > 0)
   if (!groupWithPlan) { warn('No group with payment plan found', 'Skipping lifecycle test'); }
   else {
+    // Get first parent for linking
+    const { data: parents } = await req('GET', '/api/parents')
+    const firstParent = parents?.[0]
+
     // Create student
     const { status: s1, data: newStu } = await req('POST', '/api/students', {
       firstName: 'Lifecycle',
@@ -217,6 +221,7 @@ async function run() {
       gender: 'FEMALE',
       ageGroup: 'U-12',
       trainingGroupId: groupWithPlan.id,
+      parentId: firstParent?.id || 1,
       jerseyNumber: 77,
     })
     if (s1 === 201) { ids.lifecycle = newStu.id; pass('Lifecycle: Create student', `ID=${newStu.id}`) }

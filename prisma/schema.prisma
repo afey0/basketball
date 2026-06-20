@@ -36,6 +36,7 @@ model Student {
   gender          String   // MALE, FEMALE
   ageGroup        String   // U-8, U-10, U-12, U-14, U-16, U-18
   profilePhoto    String?
+  idCardUrl       String?
   jerseyNumber    Int?
   medicalNotes    String?
   enrollmentDate  DateTime @default(now())

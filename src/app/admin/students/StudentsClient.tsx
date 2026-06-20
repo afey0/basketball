@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { Plus, Search, Download, Eye, Edit, Trash2, Filter } from 'lucide-react'
-import { formatDate, calculateAge, AGE_GROUPS } from '@/lib/utils'
+import { formatDate, formatDateForInput, calculateAge, AGE_GROUPS } from '@/lib/utils'
 import Link from 'next/link'
 
 interface Props { students: any[]; groups: any[]; parents: any[] }
@@ -304,7 +304,7 @@ export function StudentModal({ groups, parents, student, onClose, onSave }: any)
             <div className="grid-2">
               <div className="form-group">
                 <label className="form-label">Date of Birth *</label>
-                <input className="input" type="date" required value={form.dateOfBirth ? form.dateOfBirth.toString().split('T')[0] : ''} onChange={e => set('dateOfBirth', e.target.value)} />
+                <input className="input" type="date" required max={formatDateForInput(new Date())} value={formatDateForInput(form.dateOfBirth)} onChange={e => set('dateOfBirth', e.target.value)} />
               </div>
               <div className="form-group">
                 <label className="form-label">Gender *</label>
@@ -334,9 +334,9 @@ export function StudentModal({ groups, parents, student, onClose, onSave }: any)
               </select>
             </div>
             <div className="form-group">
-              <label className="form-label">Parent / Guardian</label>
-              <select className="select" value={form.parentId || ''} onChange={e => set('parentId', e.target.value)}>
-                <option value="">No parent linked</option>
+              <label className="form-label">Parent / Guardian *</label>
+              <select className="select" required value={form.parentId || ''} onChange={e => set('parentId', e.target.value)}>
+                <option value="" disabled>Select parent/guardian *</option>
                 {parents.map((p: any) => <option key={p.id} value={p.id}>{p.name} ({p.email})</option>)}
               </select>
             </div>

@@ -147,6 +147,10 @@ async function run() {
   const { data: groups } = await api('GET', '/api/groups')
   const firstGroup = groups?.[0]
 
+  // Get parents for linking
+  const { data: initialParentList } = await api('GET', '/api/parents')
+  const firstParent = initialParentList?.[0]
+
   // Create student
   const now = Date.now()
   const { status: createStatus, data: newStudent } = await api('POST', '/api/students', {
@@ -156,6 +160,7 @@ async function run() {
     gender: 'MALE',
     ageGroup: 'U-12',
     trainingGroupId: firstGroup?.id || null,
+    parentId: firstParent?.id || 1,
     jerseyNumber: 99,
     medicalNotes: 'Test allergy note',
   })
@@ -355,7 +360,7 @@ async function run() {
   const { status: createParentStatus, data: newParent } = await api('POST', '/api/parents', {
     name: 'Test Parent',
     email: testEmail,
-    phone: '+960 777-0000',
+    phone: '9607770000',
     password: 'testpass123',
   })
   if (createParentStatus === 201 && newParent?.id) {

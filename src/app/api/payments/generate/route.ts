@@ -11,8 +11,14 @@ export async function POST(req: NextRequest) {
   const { month, dueDay = 5 } = body
 
   if (!month) return NextResponse.json({ error: 'Month required (YYYY-MM)' }, { status: 400 })
+  if (!/^\d{4}-\d{2}$/.test(month)) {
+    return NextResponse.json({ error: 'Invalid month format, must be YYYY-MM' }, { status: 400 })
+  }
 
   const [yr, mo] = month.split('-').map(Number)
+  if (isNaN(yr) || isNaN(mo) || mo < 1 || mo > 12) {
+    return NextResponse.json({ error: 'Invalid year or month numbers' }, { status: 400 })
+  }
   const dueDate = new Date(yr, mo - 1, dueDay)
 
   // Get all active students with their payment plans

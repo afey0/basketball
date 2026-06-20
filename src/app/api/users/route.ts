@@ -48,6 +48,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
     }
 
+    if (phone && !/^\d+$/.test(phone.trim())) {
+      return NextResponse.json({ error: 'Phone number must contain only digits' }, { status: 400 })
+    }
+
     const hashedPassword = await bcrypt.hash(password, 12)
 
     const user = await prisma.user.create({

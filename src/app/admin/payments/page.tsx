@@ -1,5 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import TopHeader from '@/components/layout/TopHeader'
+import { auth } from '@/auth'
+import { redirect } from 'next/navigation'
 import PaymentsClient from './PaymentsClient'
 
 export default async function PaymentsPage() {

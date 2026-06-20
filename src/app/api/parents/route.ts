@@ -24,6 +24,15 @@ export async function POST(req: NextRequest) {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await req.json()
+  if (!body.name || !body.email || !body.phone) {
+    return NextResponse.json({ error: 'Name, email, and phone number are required' }, { status: 400 })
+  }
+
+  const cleanPhone = body.phone.trim()
+  if (!/^\d+$/.test(cleanPhone)) {
+    return NextResponse.json({ error: 'Phone number must contain only digits' }, { status: 400 })
+  }
+
   const hashedPassword = await bcrypt.hash(body.password || 'parent123', 12)
 
   try {
@@ -32,7 +41,7 @@ export async function POST(req: NextRequest) {
         name: body.name,
         email: body.email,
         password: hashedPassword,
-        phone: body.phone || null,
+        phone: body.phone,
         role: 'PARENT',
       },
     })

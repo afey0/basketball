@@ -12,6 +12,7 @@ const childUpdateSchema = z.object({
   jerseyNumber: z.number().optional().nullable(),
   medicalNotes: z.string().optional().nullable(),
   profilePhoto: z.string().optional().nullable(),
+  idCardUrl: z.string().optional().nullable(),
 })
 
 export async function PUT(req: NextRequest, props: { params: Promise<{ id: string }> }) {
@@ -36,6 +37,16 @@ export async function PUT(req: NextRequest, props: { params: Promise<{ id: strin
     const data = childUpdateSchema.parse(body)
 
     const dob = data.dateOfBirth ? new Date(data.dateOfBirth) : undefined
+    if (dob && isNaN(dob.getTime())) {
+      return NextResponse.json({ error: 'Invalid Date of Birth' }, { status: 400 })
+    }
+    if (dob) {
+      const today = new Date()
+      today.setHours(23, 59, 59, 999)
+      if (dob > today) {
+        return NextResponse.json({ error: 'Date of Birth cannot be in the future' }, { status: 400 })
+      }
+    }
     const age = dob ? new Date().getFullYear() - dob.getFullYear() : undefined
 
     const updated = await prisma.student.update({
@@ -49,6 +60,7 @@ export async function PUT(req: NextRequest, props: { params: Promise<{ id: strin
         ...(data.jerseyNumber !== undefined && { jerseyNumber: data.jerseyNumber }),
         ...(data.medicalNotes !== undefined && { medicalNotes: data.medicalNotes }),
         ...(data.profilePhoto !== undefined && { profilePhoto: data.profilePhoto }),
+        ...(data.idCardUrl !== undefined && { idCardUrl: data.idCardUrl }),
       },
       include: { trainingGroup: true }
     })

@@ -17,11 +17,11 @@ export default function StudentDetailClient({ student: initial, groups, parents 
   const [tab, setTab] = useState<'overview' | 'attendance' | 'payments'>('overview')
   const [showEdit, setShowEdit] = useState(false)
 
-  const attendanceRate = student.attendance.length > 0
+  const attendanceRate = student.attendance?.length > 0
     ? Math.round((student.attendance.filter((a: any) => a.status === 'PRESENT').length / student.attendance.length) * 100)
     : 0
 
-  const totalOwed = student.payments
+  const totalOwed = (student.payments || [])
     .filter((p: any) => ['UNPAID', 'OVERDUE'].includes(p.status))
     .reduce((sum: number, p: any) => sum + p.amount, 0)
 
@@ -144,7 +144,7 @@ export default function StudentDetailClient({ student: initial, groups, parents 
                     Coach: {student.trainingGroup.coach?.name || 'Unassigned'}
                   </div>
                 </div>
-                {student.trainingGroup.schedules.map((s: any) => (
+                {student.trainingGroup.schedules?.map((s: any) => (
                   <div key={s.id} style={{
                     display: 'flex', justifyContent: 'space-between',
                     padding: '0.5rem 0.75rem', background: 'var(--brand-light)',
@@ -175,7 +175,7 @@ export default function StudentDetailClient({ student: initial, groups, parents 
       {tab === 'attendance' && (
         <div className="card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-            <h3 style={{ fontWeight: 700 }}>Attendance History ({student.attendance.length} records)</h3>
+            <h3 style={{ fontWeight: 700 }}>Attendance History ({student.attendance?.length || 0} records)</h3>
             <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.75rem' }}>
               {[['present','#166534','PRESENT'],['absent','#b91c1c','ABSENT'],['late','#854d0e','LATE'],['excused','#1e40af','EXCUSED']].map(([cls, col, lbl]) => (
                 <span key={cls} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
@@ -190,7 +190,7 @@ export default function StudentDetailClient({ student: initial, groups, parents 
               <tr><th>Date</th><th>Status</th><th>Notes</th></tr>
             </thead>
             <tbody>
-              {student.attendance.map((a: any) => (
+              {student.attendance?.map((a: any) => (
                 <tr key={a.id}>
                   <td>{formatDate(a.date)}</td>
                   <td>
@@ -201,7 +201,7 @@ export default function StudentDetailClient({ student: initial, groups, parents 
                   <td style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{a.notes || '—'}</td>
                 </tr>
               ))}
-              {student.attendance.length === 0 && (
+              {(!student.attendance || student.attendance.length === 0) && (
                 <tr><td colSpan={3} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>No attendance records</td></tr>
               )}
             </tbody>
@@ -225,7 +225,7 @@ export default function StudentDetailClient({ student: initial, groups, parents 
               <tr><th>Month</th><th>Amount</th><th>Due Date</th><th>Paid Date</th><th>Method</th><th>Status</th><th>Receipt</th></tr>
             </thead>
             <tbody>
-              {student.payments.map((p: any) => (
+              {student.payments?.map((p: any) => (
                 <tr key={p.id}>
                   <td style={{ fontWeight: 600 }}>{formatMonth(p.paymentMonth)}</td>
                   <td>{formatCurrency(p.amount)}</td>
@@ -252,7 +252,7 @@ export default function StudentDetailClient({ student: initial, groups, parents 
                   </td>
                 </tr>
               ))}
-              {student.payments.length === 0 && (
+              {(!student.payments || student.payments.length === 0) && (
                 <tr><td colSpan={7} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>No payment records</td></tr>
               )}
             </tbody>

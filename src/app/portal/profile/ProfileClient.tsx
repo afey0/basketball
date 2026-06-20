@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { Plus, Edit, Trash2, Camera, Loader2, AlertCircle } from 'lucide-react'
-import { AGE_GROUPS } from '@/lib/utils'
+import { Plus, Edit, Trash2, Camera, Loader2, AlertCircle, FileText, Upload } from 'lucide-react'
+import { AGE_GROUPS, formatDateForInput } from '@/lib/utils'
 
 interface Props {
   initialChildren: any[]
@@ -80,7 +80,19 @@ export default function ProfileClient({ initialChildren }: Props) {
                     {child.firstName} {child.lastName}
                     {child.jerseyNumber && <span style={{ fontSize: '1rem', color: 'var(--brand)', marginLeft: '0.5rem' }}>#{child.jerseyNumber}</span>}
                   </h2>
-                  <div style={{ display: 'flex', gap: '0.375rem' }}>
+                  <div style={{ display: 'flex', gap: '0.375rem', alignItems: 'center' }}>
+                    {child.idCardUrl && (
+                      <a 
+                        href={child.idCardUrl} 
+                        target="_blank" 
+                        rel="noreferrer" 
+                        className="btn-ghost" 
+                        style={{ padding: '0.35rem', color: 'var(--brand)', display: 'inline-flex', alignItems: 'center' }} 
+                        title="View ID Card / Passport"
+                      >
+                        <FileText size={14} />
+                      </a>
+                    )}
                     <button className="btn-ghost" style={{ padding: '0.35rem' }} onClick={() => { setEditChild(child); setShowModal(true) }} title="Edit child">
                       <Edit size={14} />
                     </button>
@@ -225,6 +237,7 @@ function ChildModal({ child, onClose, onSave }: any) {
           jerseyNumber: child.jerseyNumber || '',
           medicalNotes: child.medicalNotes || '',
           profilePhoto: child.profilePhoto || '',
+          idCardUrl: child.idCardUrl || '',
         }
       : {
           firstName: '',
@@ -235,9 +248,11 @@ function ChildModal({ child, onClose, onSave }: any) {
           jerseyNumber: '',
           medicalNotes: '',
           profilePhoto: '',
+          idCardUrl: '',
         }
   )
   const [uploading, setUploading] = useState(false)
+  const [uploadingId, setUploadingId] = useState(false)
   const [saving, setSaving] = useState(false)
   const set = (k: string, v: any) => setForm(f => ({ ...f, [k]: v }))
 
@@ -258,6 +273,26 @@ function ChildModal({ child, onClose, onSave }: any) {
       toast.error('Failed to upload photo.')
     } finally {
       setUploading(false)
+    }
+  }
+
+  async function handleIdCardChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingId(true)
+    const formData = new FormData()
+    formData.append('file', file)
+
+    try {
+      const res = await fetch('/api/upload', { method: 'POST', body: formData })
+      if (!res.ok) throw new Error()
+      const data = await res.json()
+      set('idCardUrl', data.url)
+      toast.success('ID Card / Passport uploaded!')
+    } catch {
+      toast.error('Failed to upload ID Card / Passport.')
+    } finally {
+      setUploadingId(false)
     }
   }
 
@@ -339,7 +374,7 @@ function ChildModal({ child, onClose, onSave }: any) {
             <div className="grid-2">
               <div className="form-group">
                 <label className="form-label">Date of Birth *</label>
-                <input className="input" type="date" required value={form.dateOfBirth} onChange={e => set('dateOfBirth', e.target.value)} />
+                <input className="input" type="date" required max={formatDateForInput(new Date())} value={form.dateOfBirth} onChange={e => set('dateOfBirth', e.target.value)} />
               </div>
               <div className="form-group">
                 <label className="form-label">Gender *</label>
@@ -375,10 +410,32 @@ function ChildModal({ child, onClose, onSave }: any) {
                 onChange={e => set('medicalNotes', e.target.value)}
               />
             </div>
+
+            <div className="form-group" style={{ marginBottom: '1rem' }}>
+              <label className="form-label">ID Card / Passport (PDF or Image)</label>
+              <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                <label className="btn-secondary" style={{ fontSize: '0.8rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.375rem', padding: '0.5rem 0.875rem' }}>
+                  {uploadingId ? (
+                    <><Loader2 size={14} className="animate-spin" /> Uploading...</>
+                  ) : (
+                    <><Upload size={14} /> {form.idCardUrl ? 'Change File' : 'Upload File'}</>
+                  )}
+                  <input type="file" accept="image/*,application/pdf" onChange={handleIdCardChange} style={{ display: 'none' }} disabled={uploadingId} />
+                </label>
+                {form.idCardUrl && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}>
+                    <span style={{ color: '#166534', fontWeight: 600 }}>✓ Uploaded</span>
+                    <a href={form.idCardUrl} target="_blank" rel="noreferrer" className="btn-ghost" style={{ padding: '0.25rem 0.5rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem', color: 'var(--brand)', textDecoration: 'none' }}>
+                      <FileText size={14} /> View File
+                    </a>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
           <div className="modal-footer">
             <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>
-            <button type="submit" className="btn-primary" disabled={saving || uploading}>
+            <button type="submit" className="btn-primary" disabled={saving || uploading || uploadingId}>
               {saving ? 'Saving...' : 'Save Profile'}
             </button>
           </div>

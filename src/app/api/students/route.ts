@@ -10,7 +10,7 @@ const studentSchema = z.object({
   gender: z.enum(['MALE', 'FEMALE']),
   ageGroup: z.string(),
   trainingGroupId: z.number().optional().nullable(),
-  parentId: z.number().optional().nullable(),
+  parentId: z.number({ required_error: 'Parent / Guardian is required' }),
   jerseyNumber: z.number().optional().nullable(),
   medicalNotes: z.string().optional().nullable(),
   status: z.string().optional(),
@@ -64,6 +64,14 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const data = studentSchema.parse(body)
     const dob = new Date(data.dateOfBirth)
+    if (isNaN(dob.getTime())) {
+      return NextResponse.json({ error: 'Invalid Date of Birth' }, { status: 400 })
+    }
+    const today = new Date()
+    today.setHours(23, 59, 59, 999)
+    if (dob > today) {
+      return NextResponse.json({ error: 'Date of Birth cannot be in the future' }, { status: 400 })
+    }
     const age = new Date().getFullYear() - dob.getFullYear()
 
     const student = await prisma.student.create({

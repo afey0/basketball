@@ -108,7 +108,7 @@ async function run() {
       body: JSON.stringify({
         name: 'Email Coach',
         email: 'emailcoach@mbc.mv',
-        phone: '+9609000001',
+        phone: '9609000001',
         password: 'coachpassword123',
         role: 'COACH',
       })

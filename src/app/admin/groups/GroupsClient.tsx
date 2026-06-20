@@ -63,7 +63,7 @@ export default function GroupsClient({ groups: initial, coaches }: Props) {
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
                 <span style={{ color: 'var(--text-muted)' }}>Students</span>
                 <span style={{ fontWeight: 600, color: GROUP_COLORS[i % GROUP_COLORS.length] }}>
-                  {g._count.students} / {g.maxCapacity}
+                  {(g._count?.students ?? 0)} / {g.maxCapacity}
                 </span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
@@ -72,13 +72,13 @@ export default function GroupsClient({ groups: initial, coaches }: Props) {
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
                 <span style={{ color: 'var(--text-muted)' }}>Sessions/week</span>
-                <span style={{ fontWeight: 600 }}>{g.schedules.filter((s: any) => s.isActive).length}</span>
+                <span style={{ fontWeight: 600 }}>{g.schedules ? g.schedules.filter((s: any) => s.isActive).length : 0}</span>
               </div>
             </div>
 
             <div className="progress-bar">
               <div className="progress-fill" style={{
-                width: `${Math.min((g._count.students / g.maxCapacity) * 100, 100)}%`,
+                width: `${Math.min(((g._count?.students ?? 0) / g.maxCapacity) * 100, 100)}%`,
                 background: GROUP_COLORS[i % GROUP_COLORS.length]
               }} />
             </div>

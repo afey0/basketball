@@ -12,14 +12,42 @@ export async function PUT(req: NextRequest, props: { params: Promise<{ id: strin
   const id = parseInt(rawId)
   const body = await req.json()
 
+  const loggedInUserRole = (session.user as any).role
+  const loggedInUserId = parseInt(session.user.id)
+
+  if (loggedInUserRole !== 'ADMIN' && loggedInUserId !== id) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
+  if (body.phone !== undefined && !body.phone) {
+    return NextResponse.json({ error: 'Phone number is required' }, { status: 400 })
+  }
+
+  if (body.phone !== undefined && !/^\d+$/.test(body.phone.trim())) {
+    return NextResponse.json({ error: 'Phone number must contain only digits' }, { status: 400 })
+  }
+
   try {
     const data: any = {
       ...(body.name && { name: body.name }),
       ...(body.email && { email: body.email }),
-      ...(body.phone !== undefined && { phone: body.phone || null }),
+      ...(body.phone !== undefined && { phone: body.phone }),
     }
 
     if (body.password) {
+      if (loggedInUserRole === 'PARENT') {
+        if (!body.currentPassword) {
+          return NextResponse.json({ error: 'Current password is required to change password' }, { status: 400 })
+        }
+        const currentUser = await prisma.user.findUnique({ where: { id } })
+        if (!currentUser) {
+          return NextResponse.json({ error: 'User not found' }, { status: 404 })
+        }
+        const valid = await bcrypt.compare(body.currentPassword, currentUser.password)
+        if (!valid) {
+          return NextResponse.json({ error: 'Incorrect current password' }, { status: 400 })
+        }
+      }
       data.password = await bcrypt.hash(body.password, 12)
     }
 
@@ -44,6 +72,11 @@ export async function PUT(req: NextRequest, props: { params: Promise<{ id: strin
 export async function DELETE(req: NextRequest, props: { params: Promise<{ id: string }> }) {
   const session = await auth()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const loggedInUserRole = (session.user as any).role
+  if (loggedInUserRole !== 'ADMIN') {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
 
   const { id: rawId } = await props.params
   const id = parseInt(rawId)

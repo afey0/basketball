@@ -22,6 +22,10 @@ export async function PUT(req: NextRequest, props: { params: Promise<{ id: strin
     return NextResponse.json({ error: 'Cannot remove admin role from yourself' }, { status: 400 })
   }
 
+  if (body.phone !== undefined && body.phone && !/^\d+$/.test(body.phone.trim())) {
+    return NextResponse.json({ error: 'Phone number must contain only digits' }, { status: 400 })
+  }
+
   try {
     const data: any = {
       ...(body.name && { name: body.name }),

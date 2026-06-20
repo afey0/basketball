@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mbc-crm-cache-v1';
+const CACHE_NAME = 'mbc-crm-cache-v2';
 const OFFLINE_URL = '/offline.html';
 
 const ASSETS_TO_CACHE = [
@@ -39,6 +39,13 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   // Only handle GET requests and same-origin or local requests
   if (event.request.method !== 'GET') return;
+
+  // Bypass cache entirely in development mode to prevent stale chunk errors
+  const isDev = self.location.hostname === 'localhost' || 
+                self.location.hostname === '127.0.0.1' || 
+                self.location.hostname.startsWith('192.168.') || 
+                self.location.hostname.startsWith('10.');
+  if (isDev) return;
 
   // Handle navigation requests (HTML pages)
   if (event.request.mode === 'navigate') {

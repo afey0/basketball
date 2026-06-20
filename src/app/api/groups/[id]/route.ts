@@ -30,6 +30,14 @@ export async function PUT(req: NextRequest, props: { params: Promise<{ id: strin
   const id = parseInt(rawId)
   const body = await req.json()
 
+  if (body.monthlyFee !== undefined) {
+    await prisma.paymentPlan.upsert({
+      where: { trainingGroupId: id },
+      update: { monthlyFee: parseFloat(body.monthlyFee) },
+      create: { trainingGroupId: id, monthlyFee: parseFloat(body.monthlyFee), currency: 'MVR' },
+    })
+  }
+
   const group = await prisma.trainingGroup.update({
     where: { id },
     data: {
@@ -39,16 +47,13 @@ export async function PUT(req: NextRequest, props: { params: Promise<{ id: strin
       ...(body.maxCapacity && { maxCapacity: body.maxCapacity }),
       ...(body.description !== undefined && { description: body.description }),
     },
-    include: { coach: true, _count: { select: { students: true } } },
+    include: {
+      coach: true,
+      schedules: true,
+      paymentPlan: true,
+      _count: { select: { students: true } }
+    },
   })
-
-  if (body.monthlyFee !== undefined) {
-    await prisma.paymentPlan.upsert({
-      where: { trainingGroupId: id },
-      update: { monthlyFee: parseFloat(body.monthlyFee) },
-      create: { trainingGroupId: id, monthlyFee: parseFloat(body.monthlyFee), currency: 'MVR' },
-    })
-  }
 
   return NextResponse.json(group)
 }

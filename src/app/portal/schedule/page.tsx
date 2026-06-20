@@ -2,14 +2,20 @@ import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 
-export default async function PortalSchedulePage() {
+export default async function PortalSchedulePage(props: { searchParams: Promise<{ studentId?: string }> }) {
   const session = await auth()
   if (!session) redirect('/auth/login')
   const userId = parseInt((session.user as any).id)
+  const searchParams = await props.searchParams
+  const studentId = searchParams.studentId ? parseInt(searchParams.studentId) : undefined
   const todayDow = ['SUN','MON','TUE','WED','THU','FRI','SAT'][new Date().getDay()]
 
   const children = await prisma.student.findMany({
-    where: { parentId: userId },
+    where: { 
+      parentId: userId,
+      ...(studentId ? { id: studentId } : {}),
+      status: { not: 'DELETED_BY_PARENT' }
+    },
     include: {
       trainingGroup: {
         include: {

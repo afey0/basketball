@@ -34,11 +34,16 @@ export async function POST(req: NextRequest) {
     include: { coach: true, _count: { select: { students: true } } },
   })
 
+  let paymentPlan = null
   if (body.monthlyFee) {
-    await prisma.paymentPlan.create({
+    paymentPlan = await prisma.paymentPlan.create({
       data: { trainingGroupId: group.id, monthlyFee: parseFloat(body.monthlyFee), currency: 'MVR' }
     })
   }
 
-  return NextResponse.json(group, { status: 201 })
+  return NextResponse.json({
+    ...group,
+    paymentPlan,
+    schedules: [],
+  }, { status: 201 })
 }
