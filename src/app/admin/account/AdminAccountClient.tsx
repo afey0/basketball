@@ -9,12 +9,12 @@ interface Props {
   user: any
 }
 
-export default function AccountClient({ user }: Props) {
+export default function AdminAccountClient({ user }: Props) {
   const router = useRouter()
 
   // Profile Form States
   const [name, setName] = useState(user?.name || '')
-  const [phone, setPhone] = useState(user?.phone || '')
+  const [phone, setPhone] = useState('')
   const [updatingProfile, setUpdatingProfile] = useState(false)
   const [loading, setLoading] = useState(true)
 
@@ -37,22 +37,22 @@ export default function AccountClient({ user }: Props) {
 
   async function handleUpdateProfile(e: React.FormEvent) {
     e.preventDefault()
-    if (!name.trim() || !phone.trim()) {
-      toast.error('Name and phone number are required.')
+    if (!name.trim()) {
+      toast.error('Name is required.')
       return
     }
 
-    if (!/^\d+$/.test(phone.trim())) {
+    if (phone.trim() && !/^\d+$/.test(phone.trim())) {
       toast.error('Phone number must contain only digits.')
       return
     }
 
     setUpdatingProfile(true)
     try {
-      const res = await fetch(`/api/parents/${user.id}`, {
+      const res = await fetch(`/api/users/${user.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, phone }),
+        body: JSON.stringify({ name, phone: phone.trim() || null }),
       })
 
       if (!res.ok) {
@@ -86,7 +86,7 @@ export default function AccountClient({ user }: Props) {
 
     setUpdatingPassword(true)
     try {
-      const res = await fetch(`/api/parents/${user.id}`, {
+      const res = await fetch(`/api/users/${user.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -134,7 +134,7 @@ export default function AccountClient({ user }: Props) {
             <label className="form-label">Email Address (Read-only)</label>
             <input className="input" type="email" disabled value={user?.email || ''} style={{ background: 'var(--surface-2)', cursor: 'not-allowed', color: 'var(--text-muted)' }} />
             <small style={{ color: 'var(--text-muted)', fontSize: '0.7rem', marginTop: '0.25rem', display: 'block' }}>
-              To change your registered email, please contact club administration.
+              Email address is used for secure system login and cannot be altered.
             </small>
           </div>
 
@@ -144,8 +144,8 @@ export default function AccountClient({ user }: Props) {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Phone Number *</label>
-            <input className="input" required value={phone} onChange={e => setPhone(e.target.value)} />
+            <label className="form-label">Phone Number (optional)</label>
+            <input className="input" value={phone} onChange={e => setPhone(e.target.value)} placeholder="e.g. 7771234" />
           </div>
 
           <button className="btn-primary" type="submit" disabled={updatingProfile} style={{ marginTop: '0.5rem', justifyContent: 'center' }}>

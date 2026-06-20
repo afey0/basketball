@@ -4,21 +4,50 @@ import { auth } from '@/auth'
 import bcrypt from 'bcryptjs'
 import { sendPasswordResetEmail } from '@/lib/email'
 
-export async function PUT(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+export async function GET(req: NextRequest, props: { params: Promise<{ id: string }> }) {
   const session = await auth()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const userRole = (session.user as any)?.role
-  if (userRole !== 'ADMIN') {
-    return NextResponse.json({ error: 'Forbidden: Admins only' }, { status: 403 })
+  const { id: rawId } = await props.params
+  const id = parseInt(rawId)
+  const loggedInUserId = parseInt((session.user as any).id)
+  const loggedInUserRole = (session.user as any)?.role
+
+  if (loggedInUserRole !== 'ADMIN' && loggedInUserId !== id) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id }
+    })
+    if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
+
+    const { password, ...safe } = user
+    return NextResponse.json(safe)
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message || 'Server error' }, { status: 500 })
+  }
+}
+
+export async function PUT(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const session = await auth()
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id: rawId } = await props.params
   const id = parseInt(rawId)
   const body = await req.json()
 
+  const loggedInUserRole = (session.user as any)?.role
+  const loggedInUserId = parseInt((session.user as any).id)
+
+  // A user can update their own profile, but only admins can update other profiles
+  if (loggedInUserRole !== 'ADMIN' && loggedInUserId !== id) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
   // Prevent self-role modification to non-admin or self-deletion to prevent lockouts
-  if (id === parseInt((session.user as any).id) && body.role && body.role !== 'ADMIN') {
+  if (id === loggedInUserId && body.role && body.role !== 'ADMIN' && loggedInUserRole === 'ADMIN') {
     return NextResponse.json({ error: 'Cannot remove admin role from yourself' }, { status: 400 })
   }
 
@@ -31,10 +60,23 @@ export async function PUT(req: NextRequest, props: { params: Promise<{ id: strin
       ...(body.name && { name: body.name }),
       ...(body.email && { email: body.email }),
       ...(body.phone !== undefined && { phone: body.phone || null }),
-      ...(body.role && { role: body.role }),
+      ...(body.role && loggedInUserRole === 'ADMIN' && { role: body.role }),
     }
 
     if (body.password) {
+      if (loggedInUserId === id) {
+        if (!body.currentPassword) {
+          return NextResponse.json({ error: 'Current password is required to change password' }, { status: 400 })
+        }
+        const currentUser = await prisma.user.findUnique({ where: { id } })
+        if (!currentUser) {
+          return NextResponse.json({ error: 'User not found' }, { status: 404 })
+        }
+        const valid = await bcrypt.compare(body.currentPassword, currentUser.password)
+        if (!valid) {
+          return NextResponse.json({ error: 'Incorrect current password' }, { status: 400 })
+        }
+      }
       data.password = await bcrypt.hash(body.password, 12)
     }
 
