@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
-  LayoutDashboard, Users, UserCheck, Trophy, Calendar,
+  LayoutDashboard, Users, UserCheck, Calendar,
   CheckSquare, CreditCard, Settings,
-  ChevronRight, X
+  ChevronRight, X, Briefcase, Target, Shield, Trophy
 } from 'lucide-react'
 import { useAdminUser } from '@/components/layout/AdminUserContext'
 
@@ -22,8 +22,8 @@ const navSections = [
     items: [
       { href: '/admin/students', icon: Users, label: 'Students' },
       { href: '/admin/parents', icon: UserCheck, label: 'Parents' },
-      { href: '/admin/staffs', icon: Users, label: 'Staffs' },
-      { href: '/admin/groups', icon: Trophy, label: 'Training Groups' },
+      { href: '/admin/staffs', icon: Briefcase, label: 'Staffs' },
+      { href: '/admin/groups', icon: Target, label: 'Training Groups' },
     ]
   },
   {
@@ -37,7 +37,7 @@ const navSections = [
   {
     title: 'System',
     items: [
-      { href: '/admin/users', icon: UserCheck, label: 'User Accounts' },
+      { href: '/admin/users', icon: Shield, label: 'User Accounts' },
       { href: '/admin/settings', icon: Settings, label: 'Settings' },
     ]
   }
@@ -92,8 +92,10 @@ export default function AdminSidebar() {
               width: 38, height: 38, borderRadius: 10,
               background: 'linear-gradient(135deg, #4f46e5, #6366f1)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 20, flexShrink: 0
-            }}>🏀</div>
+              flexShrink: 0
+            }}>
+              <Trophy size={20} style={{ color: '#fff' }} />
+            </div>
             <div>
               <div style={{ fontWeight: 800, fontSize: '0.9rem', lineHeight: 1.2, color: 'var(--text)' }}>MBC CRM</div>
               <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>

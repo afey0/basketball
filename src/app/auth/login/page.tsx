@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Eye, EyeOff, Loader2 } from 'lucide-react'
+import { Eye, EyeOff, Loader2, Trophy } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -60,9 +60,11 @@ export default function LoginPage() {
             width: 72, height: 72, borderRadius: 20,
             background: 'linear-gradient(135deg, var(--brand), #6366f1)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 36, margin: '0 auto 1rem',
+            margin: '0 auto 1rem',
             boxShadow: '0 12px 30px rgba(79,70,229,0.25)',
-          }}>🏀</div>
+          }}>
+            <Trophy size={36} style={{ color: '#fff' }} />
+          </div>
           <h1 style={{ fontSize: '1.875rem', fontWeight: 900, marginBottom: '0.25rem' }}>
             <span className="gradient-text">MBC CRM</span>
           </h1>

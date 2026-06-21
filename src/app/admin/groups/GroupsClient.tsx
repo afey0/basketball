@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { Plus, Edit, Trash2, Users, ChevronRight } from 'lucide-react'
+import { Plus, Edit, Trash2, Users, ChevronRight, Target } from 'lucide-react'
 import Link from 'next/link'
 
 const GROUP_COLORS = ['#4f46e5','#6366f1','#10b981','#f59e0b','#ec4899']
@@ -41,9 +41,10 @@ export default function GroupsClient({ groups: initial, coaches }: Props) {
                 <div style={{
                   width: 42, height: 42, borderRadius: 12, marginBottom: '0.75rem',
                   background: `${GROUP_COLORS[i % GROUP_COLORS.length]}20`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 20,
-                }}>🏀</div>
+                  display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}>
+                  <Target size={20} style={{ color: GROUP_COLORS[i % GROUP_COLORS.length] }} />
+                </div>
                 <h3 style={{ fontWeight: 800, fontSize: '1.1rem', margin: 0 }}>{g.groupName}</h3>
                 <span className="badge badge-purple" style={{ marginTop: '0.375rem' }}>{g.ageGroup}</span>
               </div>
@@ -91,7 +92,9 @@ export default function GroupsClient({ groups: initial, coaches }: Props) {
         ))}
         {groups.length === 0 && (
           <div className="empty-state" style={{ gridColumn: '1/-1' }}>
-            <div className="empty-state-icon">🏀</div>
+            <div className="empty-state-icon" style={{ color: 'var(--text-muted)', background: 'var(--surface-2)', padding: '0.75rem', borderRadius: '50%', display: 'inline-flex' }}>
+              <Target size={36} />
+            </div>
             <div className="empty-state-title">No training groups yet</div>
             <button className="btn-primary" style={{ marginTop: '1rem' }} onClick={() => setShowModal(true)}>Create First Group</button>
           </div>

@@ -17,7 +17,8 @@ import {
   Mail, 
   MapPin, 
   Loader2, 
-  X 
+  X,
+  Trophy
 } from 'lucide-react'
 import { useAdminUser } from './AdminUserContext'
 
@@ -282,8 +283,10 @@ export default function TopHeader({ title, subtitle }: TopHeaderProps) {
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', fontSize: '0.85rem' }}>
-                <div style={{ textAlign: 'center', padding: '0.5rem 0' }}>
-                  <span style={{ fontSize: '2.5rem' }}>🏀</span>
+                <div style={{ textAlign: 'center', padding: '0.5rem 0', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 50, height: 50, borderRadius: '50%', background: 'var(--brand-light)', color: 'var(--brand)', marginBottom: '0.5rem' }}>
+                    <Trophy size={30} />
+                  </div>
                   <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: '0.5rem 0 0 0', color: 'var(--text)' }}>
                     {clubSettings?.clubName || 'Maldives Basketball Club'}
                   </h3>

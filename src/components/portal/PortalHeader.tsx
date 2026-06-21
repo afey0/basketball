@@ -16,15 +16,20 @@ import {
   Mail, 
   MapPin, 
   Loader2, 
-  X 
+  X,
+  LayoutDashboard,
+  CreditCard,
+  CheckSquare,
+  Calendar,
+  Trophy
 } from 'lucide-react'
 
 const NAV_LINKS = [
-  { href: '/portal', icon: '🏠', label: 'Dashboard' },
-  { href: '/portal/profile', icon: '👦', label: 'Profile' },
-  { href: '/portal/payments', icon: '💰', label: 'Payments' },
-  { href: '/portal/attendance', icon: '✅', label: 'Attendance' },
-  { href: '/portal/schedule', icon: '📅', label: 'Schedule' },
+  { href: '/portal', icon: LayoutDashboard, label: 'Dashboard' },
+  { href: '/portal/profile', icon: UserIcon, label: 'Profile' },
+  { href: '/portal/payments', icon: CreditCard, label: 'Payments' },
+  { href: '/portal/attendance', icon: CheckSquare, label: 'Attendance' },
+  { href: '/portal/schedule', icon: Calendar, label: 'Schedule' },
 ]
 
 export default function PortalHeader({ user }: { user: any }) {
@@ -114,7 +119,7 @@ export default function PortalHeader({ user }: { user: any }) {
 
       {/* Logo */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginRight: '0.25rem' }}>
-        <span style={{ fontSize: 22 }}>🏀</span>
+        <Trophy size={20} style={{ color: 'var(--brand)' }} />
         <span className="portal-logo-text" style={{ fontWeight: 800, fontSize: '0.95rem', whiteSpace: 'nowrap', color: 'var(--text)' }}>
           MBC Parent Portal
         </span>
@@ -128,7 +133,7 @@ export default function PortalHeader({ user }: { user: any }) {
         overflowX: 'auto',
         scrollbarWidth: 'none', /* Firefox */
       }}>
-        {NAV_LINKS.map(({ href, icon, label }) => {
+        {NAV_LINKS.map(({ href, icon: IconComponent, label }) => {
           const isActive = pathname === href
           return (
             <Link
@@ -149,7 +154,7 @@ export default function PortalHeader({ user }: { user: any }) {
                 alignItems: 'center',
               }}
             >
-              <span>{icon}</span>
+              <IconComponent size={15} />
               <span className="portal-nav-label" style={{ marginLeft: '0.35rem' }}>{label}</span>
             </Link>
           )

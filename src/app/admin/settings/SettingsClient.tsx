@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { Save } from 'lucide-react'
+import { Save, Building2, CreditCard, Mail, Send } from 'lucide-react'
 
 interface Props { settings: any; coaches: any[] }
 
@@ -63,7 +63,7 @@ export default function SettingsClient({ settings: initial, coaches }: Props) {
       <form onSubmit={handleSave}>
         {/* Club Info */}
         <div className="card" style={{ marginBottom: '1.25rem' }}>
-          <h3 style={{ fontWeight: 700, marginBottom: '1rem' }}>🏀 Club Information</h3>
+          <h3 style={{ fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Building2 size={18} style={{ color: 'var(--brand)' }} /> Club Information</h3>
           <div className="form-group">
             <label className="form-label">Club Name *</label>
             <input className="input" value={form.clubName || ''} onChange={e => set('clubName', e.target.value)} required />
@@ -86,7 +86,7 @@ export default function SettingsClient({ settings: initial, coaches }: Props) {
 
         {/* Payment Settings */}
         <div className="card" style={{ marginBottom: '1.25rem' }}>
-          <h3 style={{ fontWeight: 700, marginBottom: '1rem' }}>💰 Payment Settings</h3>
+          <h3 style={{ fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><CreditCard size={18} style={{ color: 'var(--brand)' }} /> Payment Settings</h3>
           <div className="form-group">
             <label className="form-label">Payment Due Day (of each month)</label>
             <input className="input" type="number" min={1} max={28} value={form.paymentDueDay || 5} onChange={e => set('paymentDueDay', e.target.value)} style={{ maxWidth: 100 }} />
@@ -96,7 +96,7 @@ export default function SettingsClient({ settings: initial, coaches }: Props) {
 
         {/* SMTP Email */}
         <div className="card" style={{ marginBottom: '1.25rem' }}>
-          <h3 style={{ fontWeight: 700, marginBottom: '0.25rem' }}>📧 Email / SMTP Settings</h3>
+          <h3 style={{ fontWeight: 700, marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Mail size={18} style={{ color: 'var(--brand)' }} /> Email / SMTP Settings</h3>
           <p style={{ color: '#8B8BA7', fontSize: '0.8rem', marginBottom: '1rem' }}>Configure Gmail now or Hostinger SMTP later — just update the fields below.</p>
           <div className="grid-2">
             <div className="form-group">
@@ -127,7 +127,7 @@ export default function SettingsClient({ settings: initial, coaches }: Props) {
           </div>
           
           <hr style={{ margin: '1.5rem 0', borderColor: 'var(--border)', opacity: 0.5 }} />
-          <h4 style={{ fontWeight: 700, marginBottom: '0.5rem', fontSize: '0.875rem' }}>🔌 Verify SMTP Settings</h4>
+          <h4 style={{ fontWeight: 700, marginBottom: '0.5rem', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}><Send size={14} style={{ color: 'var(--brand)' }} /> Verify SMTP Settings</h4>
           <p style={{ color: '#8B8BA7', fontSize: '0.75rem', marginBottom: '0.75rem' }}>
             Send a real test email to verify credentials before saving settings.
           </p>
