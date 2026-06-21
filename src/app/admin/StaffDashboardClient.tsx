@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { Award, FileText, CheckCircle, Calendar, MapPin, Phone, Mail, User, ShieldAlert, Download, ExternalLink, Users } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 
@@ -11,6 +12,7 @@ interface Props {
 
 export default function StaffDashboardClient({ staff, groups, recentAttendance }: Props) {
   const { user, staffType, biography, salary, contractUrl, certificatesUrl, idCardUrl, passportUrl, policeReportUrl } = staff
+  const [showSalary, setShowSalary] = useState(false)
 
   // Extract all schedules
   const allSchedules = groups.flatMap(group => 
@@ -68,18 +70,29 @@ export default function StaffDashboardClient({ staff, groups, recentAttendance }
               Member since {formatDate(user.createdAt)}
             </p>
           </div>
-          <div style={{
-            background: 'rgba(255,255,255,0.1)',
-            padding: '1rem 1.5rem',
-            borderRadius: '12px',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255,255,255,0.15)',
-            textAlign: 'right',
-            flexShrink: 0
-          }}>
-            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', tracking: '0.05em', opacity: 0.8 }}>Monthly Salary</div>
+          <div 
+            onClick={() => setShowSalary(!showSalary)}
+            style={{
+              background: 'rgba(255,255,255,0.1)',
+              padding: '1rem 1.5rem',
+              borderRadius: '12px',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255,255,255,0.15)',
+              textAlign: 'right',
+              flexShrink: 0,
+              cursor: 'pointer',
+              userSelect: 'none',
+              transition: 'background 0.2s'
+            }}
+            title="Click to toggle visibility"
+          >
+            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', opacity: 0.8 }}>Monthly Salary</div>
             <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#fcd34d' }}>
-              {salary ? `${salary.toLocaleString()} MVR` : '0 MVR'}
+              {showSalary ? (
+                salary ? `${salary.toLocaleString()} MVR` : '0 MVR'
+              ) : (
+                '•••••• MVR'
+              )}
             </div>
           </div>
         </div>
