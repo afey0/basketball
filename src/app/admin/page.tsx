@@ -94,6 +94,9 @@ export default async function AdminDashboard() {
     groupAttendance,
     flaggedStudents,
     pendingSlips,
+    currentMonthStaffPaid,
+    currentMonthStaffPending,
+    currentMonthStaffUnpaid,
   ] = await Promise.all([
     prisma.student.count({ where: { status: 'ACTIVE' } }),
     prisma.trainingGroup.count(),
@@ -155,6 +158,19 @@ export default async function AdminDashboard() {
       },
       orderBy: { createdAt: 'desc' },
     }),
+    // Staff payment queries
+    prisma.staffPayment.aggregate({
+      where: { paymentMonth: currentMonth, status: 'PAID' },
+      _sum: { amount: true },
+    }),
+    prisma.staffPayment.aggregate({
+      where: { paymentMonth: currentMonth, status: 'PENDING_VERIFICATION' },
+      _sum: { amount: true },
+    }),
+    prisma.staffPayment.aggregate({
+      where: { paymentMonth: currentMonth, status: 'PENDING' },
+      _sum: { amount: true },
+    }),
   ])
 
   // Payment collection rate
@@ -169,6 +185,9 @@ export default async function AdminDashboard() {
     lastRevenue: lastMonthPayments._sum.amount || 0,
     collectionRate,
     overdueCount: overduePayments.length,
+    staffPaid: currentMonthStaffPaid._sum.amount || 0,
+    staffPending: currentMonthStaffPending._sum.amount || 0,
+    staffUnpaid: currentMonthStaffUnpaid._sum.amount || 0,
   }
 
   return (

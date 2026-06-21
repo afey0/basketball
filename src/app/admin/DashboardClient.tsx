@@ -5,7 +5,7 @@ import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer
 } from 'recharts'
-import { Users, Trophy, TrendingUp, AlertCircle, Calendar, CheckSquare, CreditCard, ArrowUp, ArrowDown, FileText, Check, X as XIcon } from 'lucide-react'
+import { Users, Trophy, TrendingUp, AlertCircle, Calendar, CheckSquare, CreditCard, ArrowUp, ArrowDown, FileText, Check, X as XIcon, Briefcase } from 'lucide-react'
 import { formatCurrency, formatDate, formatMonth } from '@/lib/utils'
 import Link from 'next/link'
 import { toast } from 'sonner'
@@ -73,24 +73,60 @@ export default function DashboardClient({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       {/* Stats Row */}
-      <div className="grid-4">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
         <div className="stat-card">
           <div className="stat-card-icon"><Users size={18} /></div>
           <div className="stat-card-label">Active Students</div>
           <div className="stat-card-value" style={{ color: 'var(--brand)' }}>{stats.totalStudents}</div>
           <div className="stat-card-change" style={{ color: 'var(--text-muted)' }}>across {stats.totalGroups} groups</div>
         </div>
+        
         <div className="stat-card">
           <div className="stat-card-icon" style={{ background: '#dcfce7', color: '#15803d' }}><CreditCard size={18} /></div>
           <div className="stat-card-label">Revenue This Month</div>
           <div className="stat-card-value" style={{ color: '#15803d', fontSize: '1.5rem' }}>
             {formatCurrency(stats.currentRevenue)}
           </div>
-          <div className="stat-card-change" style={{ color: revenueChange >= 0 ? '#15803d' : '#b91c1c' }}>
-            {revenueChange >= 0 ? <ArrowUp size={12} /> : <ArrowDown size={12} />}
-            {Math.abs(revenueChange)}% vs last month
+          <div className="stat-card-change" style={{ color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '0.15rem', fontSize: '0.7rem', marginTop: '0.4rem', borderTop: '1px solid var(--border)', paddingTop: '0.4rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+              <span>Gross Fees:</span>
+              <span style={{ fontWeight: 600, color: 'var(--text)' }}>{formatCurrency(stats.currentRevenue)}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+              <span>Staff Paid:</span>
+              <span style={{ fontWeight: 600, color: '#ef4444' }}>-{formatCurrency(stats.staffPaid)}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', borderTop: '1px dashed var(--border)', paddingTop: '0.15rem', marginTop: '0.15rem', fontWeight: 700 }}>
+              <span>Net Cashflow:</span>
+              <span style={{ color: stats.currentRevenue - stats.staffPaid >= 0 ? '#15803d' : '#b91c1c' }}>
+                {formatCurrency(stats.currentRevenue - stats.staffPaid)}
+              </span>
+            </div>
           </div>
         </div>
+
+        <div className="stat-card">
+          <div className="stat-card-icon" style={{ background: '#ffedd5', color: '#ea580c' }}><Briefcase size={18} /></div>
+          <div className="stat-card-label">Staff Payroll (This Month)</div>
+          <div className="stat-card-value" style={{ color: '#ea580c', fontSize: '1.5rem' }}>
+            {formatCurrency(stats.staffPaid)}
+          </div>
+          <div className="stat-card-change" style={{ color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '0.15rem', fontSize: '0.7rem', marginTop: '0.4rem', borderTop: '1px solid var(--border)', paddingTop: '0.4rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+              <span>Verified Paid:</span>
+              <span style={{ fontWeight: 600, color: '#16a34a' }}>{formatCurrency(stats.staffPaid)}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+              <span>Awaiting Verify:</span>
+              <span style={{ fontWeight: 600, color: '#ea580c' }}>{formatCurrency(stats.staffPending)}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+              <span>Unpaid / Recorded:</span>
+              <span style={{ fontWeight: 600, color: '#6b7280' }}>{formatCurrency(stats.staffUnpaid)}</span>
+            </div>
+          </div>
+        </div>
+
         <div className="stat-card">
           <div className="stat-card-icon" style={{ background: '#dbeafe', color: '#1e40af' }}>
             <TrendingUp size={18} />
@@ -101,6 +137,7 @@ export default function DashboardClient({
             <div className="progress-fill" style={{ width: `${stats.collectionRate}%`, background: 'linear-gradient(90deg, #1e40af, #3b82f6)' }} />
           </div>
         </div>
+
         <div className="stat-card">
           <div className="stat-card-icon" style={{ background: '#fee2e2', color: '#b91c1c' }}>
             <AlertCircle size={18} />
