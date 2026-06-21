@@ -1,18 +1,42 @@
 'use client'
 
 import { useState } from 'react'
-import { Award, FileText, CheckCircle, Calendar, MapPin, Phone, Mail, User, ShieldAlert, Download, ExternalLink, Users } from 'lucide-react'
+import { Award, FileText, CheckCircle, Calendar, MapPin, Phone, Mail, User, ShieldAlert, Download, ExternalLink, Users, CreditCard } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
+import { toast } from 'sonner'
 
 interface Props {
   staff: any
   groups: any[]
   recentAttendance: any[]
+  payments: any[]
 }
 
-export default function StaffDashboardClient({ staff, groups, recentAttendance }: Props) {
+export default function StaffDashboardClient({ staff, groups, recentAttendance, payments }: Props) {
   const { user, staffType, biography, salary, contractUrl, certificatesUrl, idCardUrl, passportUrl, policeReportUrl } = staff
   const [showSalary, setShowSalary] = useState(false)
+  const [localPayments, setLocalPayments] = useState(payments)
+  const [verifyingId, setVerifyingId] = useState<number | null>(null)
+
+  async function handleVerifyPayment(paymentId: number) {
+    setVerifyingId(paymentId)
+    try {
+      const res = await fetch(`/api/portal/staff/payments/${paymentId}/verify`, {
+        method: 'PUT',
+      })
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error || 'Failed')
+      }
+      const updated = await res.json()
+      setLocalPayments(prev => prev.map(p => p.id === paymentId ? updated : p))
+      toast.success('Salary payment accepted and verified!')
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to verify payment')
+    } finally {
+      setVerifyingId(null)
+    }
+  }
 
   // Extract all schedules
   const allSchedules = groups.flatMap(group => 
@@ -301,6 +325,100 @@ export default function StaffDashboardClient({ staff, groups, recentAttendance }
                       <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>
                         {new Date(att.date).toLocaleDateString()}
                       </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Salary Payment History */}
+        <div style={{ gridColumn: 'span 2 / span 2' }}>
+          <div className="card">
+            <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.1rem', fontWeight: 700, margin: '0 0 1rem' }}>
+              <CreditCard size={18} style={{ color: 'var(--brand)' }} /> Salary & Payment History
+            </h3>
+            
+            {localPayments.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '2rem 1rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                No salary payments recorded yet.
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {localPayments.map(p => (
+                  <div key={p.id} style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '1rem',
+                    background: 'var(--surface-2)',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border)',
+                    flexWrap: 'wrap',
+                    gap: '0.75rem'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <div style={{
+                        width: '40px', height: '40px', borderRadius: '6px',
+                        background: 'var(--brand-light)', color: 'var(--brand)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontWeight: 800, fontSize: '0.85rem'
+                      }}>
+                        💵
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.9rem', fontWeight: 700 }}>
+                          Salary for {p.paymentMonth}
+                        </div>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>
+                          Amount: <strong>{p.amount?.toLocaleString()} MVR</strong>
+                          {p.notes && <span style={{ marginLeft: '0.5rem' }}>• {p.notes}</span>}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                      {/* Receipt File */}
+                      {p.receiptUrl ? (
+                        <a href={p.receiptUrl} target="_blank" rel="noopener noreferrer" className="btn-secondary" style={{
+                          padding: '0.35rem 0.75rem',
+                          fontSize: '0.75rem',
+                          gap: '0.25rem',
+                          borderColor: 'var(--border)'
+                        }}>
+                          View Receipt <ExternalLink size={12} />
+                        </a>
+                      ) : (
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>No receipt uploaded</span>
+                      )}
+
+                      {/* Status Badge */}
+                      <span className={`badge ${
+                        p.status === 'PAID' ? 'badge-green' :
+                        p.status === 'PENDING_VERIFICATION' ? 'badge-orange' : 'badge-gray'
+                      }`} style={{ fontSize: '0.75rem' }}>
+                        {p.status === 'PENDING' ? 'Awaiting Payment' :
+                         p.status === 'PENDING_VERIFICATION' ? 'Awaiting Verification' :
+                         'Paid & Verified'}
+                      </span>
+
+                      {/* Verification button */}
+                      {p.status === 'PENDING_VERIFICATION' && (
+                        <button
+                          onClick={() => handleVerifyPayment(p.id)}
+                          disabled={verifyingId === p.id}
+                          className="btn-primary"
+                          style={{
+                            padding: '0.35rem 0.75rem',
+                            fontSize: '0.75rem',
+                            height: 'auto',
+                            boxShadow: 'none'
+                          }}
+                        >
+                          {verifyingId === p.id ? 'Accepting...' : 'Accept Payment'}
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}

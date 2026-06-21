@@ -178,5 +178,22 @@ model Staff {
   updatedAt       DateTime @updatedAt
 
   // Relation
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  staffPayments   StaffPayment[]
+}
+
+model StaffPayment {
+  id           Int      @id @default(autoincrement())
+  staffId      Int
+  amount       Float
+  paymentMonth String   // YYYY-MM format
+  paymentDate  DateTime?
+  receiptUrl   String?  // Receipt uploaded by owner
+  status       String   @default("PENDING") // PENDING, PENDING_VERIFICATION, PAID
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relation
+  staff        Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
 }

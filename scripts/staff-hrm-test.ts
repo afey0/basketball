@@ -21,10 +21,11 @@ let failed = 0
 let cookie = ''
 let staffId = 0
 let staffUserId = 0
+let payRecordId = 0
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function log(icon: string, label: string, msg: string) {
-  console.log(`  ${icon} ${c.bold(label.padEnd(40))} ${msg}`)
+  console.log(`  ${icon} ${c.bold(label.padEnd(45))} ${msg}`)
 }
 
 function pass(label: string, detail = '') {
@@ -119,7 +120,7 @@ async function run() {
   }
 
   // ── 2. ADMIN STAFF MANAGEMENT ─────────────────────────────────────────────
-  section('2. Admin Staff CRUD')
+  section('2. Admin Staff CRUD & Payments')
 
   // List staffs (should succeed)
   const { status: listStatus, data: staffs } = await api('GET', '/api/admin/staffs')
@@ -169,9 +170,34 @@ async function run() {
 
   const { status: updateStatus, data: updatedStaff } = await api('PUT', `/api/admin/staffs/${staffId}`, updateStaffData)
   if (updateStatus === 200 && updatedStaff?.salary === 5000 && updatedStaff?.staffType === 'HEAD_CLEANER') {
-    pass('PUT /api/admin/staffs/[id] (updates salary & position)', `Salary: ${updatedStaff.salary}, Position: ${updatedStaff.staffType}`)
+    pass('PUT /api/admin/staffs/[id] (updates details)', `Salary: ${updatedStaff.salary}, Position: ${updatedStaff.staffType}`)
   } else {
-    fail('PUT /api/admin/staffs/[id] (updates salary & position)', `Status: ${updateStatus}`)
+    fail('PUT /api/admin/staffs/[id] (updates details)', `Status: ${updateStatus}`)
+  }
+
+  // Create salary payment for staff member (status PENDING)
+  const payMonth = '2026-06'
+  const payAmount = 5000
+  const newPaymentRes = await api('POST', `/api/admin/staffs/${staffId}/payments`, {
+    amount: payAmount,
+    paymentMonth: payMonth,
+    notes: 'Base salary'
+  })
+  if (newPaymentRes.status === 201 && newPaymentRes.data?.id) {
+    payRecordId = newPaymentRes.data.id
+    pass('POST /api/admin/staffs/[id]/payments (creates payment)', `PayID: ${payRecordId}, Status: ${newPaymentRes.data.status}`)
+  } else {
+    fail('POST /api/admin/staffs/[id]/payments (creates payment)', `Status: ${newPaymentRes.status}`)
+  }
+
+  // Upload receipt (updates status to PENDING_VERIFICATION)
+  const uploadReceiptRes = await api('PUT', `/api/admin/staffs/${staffId}/payments/${payRecordId}`, {
+    receiptUrl: '/uploads/photos/receipt-test.pdf'
+  })
+  if (uploadReceiptRes.status === 200 && uploadReceiptRes.data?.status === 'PENDING_VERIFICATION') {
+    pass('PUT .../payments/[payId] (uploads receipt)', `Status: ${uploadReceiptRes.data.status}`)
+  } else {
+    fail('PUT .../payments/[payId] (uploads receipt)', `Status: ${uploadReceiptRes.status}`)
   }
 
   // ── 3. ACCESS CONTROL / ROLE SEPARATION ──────────────────────────────────
@@ -218,8 +244,25 @@ async function run() {
     fail('Coach blocked from DELETE /api/admin/staffs/[id]', `Status: ${coachDeleteStatus}`)
   }
 
+  // Verify Coach cannot manage payments (GET/POST/PUT/DELETE)
+  const { status: coachPayGetStatus } = await api('GET', `/api/admin/staffs/${staffId}/payments`)
+  if (coachPayGetStatus === 403) pass('Coach blocked from GET .../payments', '403 Forbidden')
+  else fail('Coach blocked from GET .../payments', `Status: ${coachPayGetStatus}`)
+
+  const { status: coachPayPostStatus } = await api('POST', `/api/admin/staffs/${staffId}/payments`, { amount: 1000, paymentMonth: '2026-06' })
+  if (coachPayPostStatus === 403) pass('Coach blocked from POST .../payments', '403 Forbidden')
+  else fail('Coach blocked from POST .../payments', `Status: ${coachPayPostStatus}`)
+
+  const { status: coachPayPutStatus } = await api('PUT', `/api/admin/staffs/${staffId}/payments/${payRecordId}`, { amount: 1200 })
+  if (coachPayPutStatus === 403) pass('Coach blocked from PUT .../payments/[payId]', '403 Forbidden')
+  else fail('Coach blocked from PUT .../payments/[payId]', `Status: ${coachPayPutStatus}`)
+
+  const { status: coachPayDeleteStatus } = await api('DELETE', `/api/admin/staffs/${staffId}/payments/${payRecordId}`)
+  if (coachPayDeleteStatus === 403) pass('Coach blocked from DELETE .../payments/[payId]', '403 Forbidden')
+  else fail('Coach blocked from DELETE .../payments/[payId]', `Status: ${coachPayDeleteStatus}`)
+
   // ── 4. STAFF ACCOUNT LOG IN & AUTH ────────────────────────────────────────
-  section('4. Staff Account Log In')
+  section('4. Staff Account Log In & Verification')
 
   // Log in as the new staff member
   cookie = ''
@@ -236,6 +279,14 @@ async function run() {
     pass('Staff session returns role COACH', staffSess.user.role)
   } else {
     fail('Staff session returns role COACH', JSON.stringify(staffSess))
+  }
+
+  // Verify staff member can accept/verify their salary payment receipt
+  const { status: verifyPayStatus, data: verifiedPay } = await api('PUT', `/api/portal/staff/payments/${payRecordId}/verify`)
+  if (verifyPayStatus === 200 && verifiedPay?.status === 'PAID') {
+    pass('PUT .../payments/[payId]/verify (accepts payment)', `Status: ${verifiedPay.status}`)
+  } else {
+    fail('PUT .../payments/[payId]/verify (accepts payment)', `Status: ${verifyPayStatus}, Error: ${verifiedPay?.error}`)
   }
 
   // ── 5. ADMIN DELETION & CASCADE CLEANUP ────────────────────────────────────

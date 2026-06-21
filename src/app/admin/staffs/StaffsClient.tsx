@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { Plus, Search, Edit, Trash2, FileText, CheckCircle, Upload, DollarSign, Briefcase, Paperclip } from 'lucide-react'
+import { Plus, Search, Edit, Trash2, FileText, CheckCircle, Upload, DollarSign, Briefcase, Paperclip, CreditCard, Loader2, Calendar } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 
 interface Props {
@@ -24,6 +24,8 @@ export default function StaffsClient({ staffs: initialStaffs }: Props) {
   const [showAddModal, setShowAddModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [editingStaff, setEditingStaff] = useState<any | null>(null)
+  const [showPaymentsModal, setShowPaymentsModal] = useState(false)
+  const [selectedStaffForPayments, setSelectedStaffForPayments] = useState<any | null>(null)
 
   const filtered = staffs.filter(s => {
     const nameMatch = s.user.name.toLowerCase().includes(search.toLowerCase()) || 
@@ -151,6 +153,14 @@ export default function StaffsClient({ staffs: initialStaffs }: Props) {
                   <div style={{ display: 'flex', gap: '0.375rem' }}>
                     <button 
                       className="btn-ghost" 
+                      style={{ padding: '0.375rem', color: 'var(--brand)' }}
+                      onClick={() => { setSelectedStaffForPayments(s); setShowPaymentsModal(true) }}
+                      title="Salary Payment History"
+                    >
+                      <CreditCard size={14} />
+                    </button>
+                    <button 
+                      className="btn-ghost" 
                       style={{ padding: '0.375rem' }}
                       onClick={() => { setEditingStaff(s); setShowEditModal(true) }}
                       title="Edit staff details"
@@ -194,6 +204,14 @@ export default function StaffsClient({ staffs: initialStaffs }: Props) {
             setShowEditModal(false)
             setEditingStaff(null)
           }}
+        />
+      )}
+
+      {/* Salary Payments Modal */}
+      {showPaymentsModal && selectedStaffForPayments && (
+        <StaffPaymentsModal
+          staff={selectedStaffForPayments}
+          onClose={() => { setShowPaymentsModal(false); setSelectedStaffForPayments(null) }}
         />
       )}
     </div>
@@ -460,6 +478,261 @@ function StaffFormModal({ staff, onClose, onSave }: any) {
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  )
+}
+
+function StaffPaymentsModal({ staff, onClose }: any) {
+  const [payments, setPayments] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
+  const [uploadingPayId, setUploadingPayId] = useState<number | null>(null)
+
+  const now = new Date()
+  const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+
+  const [form, setForm] = useState({
+    paymentMonth: currentMonth,
+    amount: staff.salary || 0,
+    notes: '',
+  })
+
+  const set = (k: string, v: any) => setForm(f => ({ ...f, [k]: v }))
+
+  // Fetch payments on load
+  async function fetchPayments() {
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/admin/staffs/${staff.id}/payments`)
+      if (!res.ok) throw new Error()
+      const data = await res.json()
+      setPayments(data)
+    } catch {
+      toast.error('Failed to load salary payment history')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useState(() => {
+    fetchPayments()
+  })
+
+  async function handleAddPayment(e: React.FormEvent) {
+    e.preventDefault()
+    if (!form.paymentMonth) return
+
+    setSubmitting(true)
+    try {
+      const res = await fetch(`/api/admin/staffs/${staff.id}/payments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error || 'Failed')
+      }
+      const newPay = await res.json()
+      setPayments(prev => [newPay, ...prev])
+      set(
+        'paymentMonth',
+        `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`
+      )
+      set('notes', '')
+      toast.success('Salary payment recorded!')
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to record salary payment')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  async function handleReceiptUpload(e: React.ChangeEvent<HTMLInputElement>, paymentId: number) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploadingPayId(paymentId)
+    const formData = new FormData()
+    formData.append('file', file)
+
+    try {
+      // 1. Upload file
+      const uploadRes = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      })
+      if (!uploadRes.ok) throw new Error('Upload failed')
+      const { url } = await uploadRes.json()
+
+      // 2. Save receipt URL to payment record
+      const updateRes = await fetch(`/api/admin/staffs/${staff.id}/payments/${paymentId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ receiptUrl: url }),
+      })
+      if (!updateRes.ok) throw new Error('Update failed')
+      const updated = await updateRes.json()
+
+      setPayments(prev => prev.map(p => (p.id === paymentId ? updated : p)))
+      toast.success('Payment receipt uploaded! Status is now Awaiting Verification.')
+    } catch {
+      toast.error('Failed to upload receipt')
+    } finally {
+      setUploadingPayId(null)
+    }
+  }
+
+  async function handleClearReceipt(paymentId: number) {
+    if (!confirm('Are you sure you want to remove the receipt for this payment?')) return
+
+    try {
+      const res = await fetch(`/api/admin/staffs/${staff.id}/payments/${paymentId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ receiptUrl: '' }),
+      })
+      if (!res.ok) throw new Error()
+      const updated = await res.json()
+      setPayments(prev => prev.map(p => (p.id === paymentId ? updated : p)))
+      toast.success('Receipt removed.')
+    } catch {
+      toast.error('Failed to clear receipt')
+    }
+  }
+
+  async function handleDeletePayment(paymentId: number) {
+    if (!confirm('Are you sure you want to delete this payment record?')) return
+
+    try {
+      const res = await fetch(`/api/admin/staffs/${staff.id}/payments/${paymentId}`, {
+        method: 'DELETE',
+      })
+      if (!res.ok) throw new Error()
+      setPayments(prev => prev.filter(p => p.id !== paymentId))
+      toast.success('Payment record deleted.')
+    } catch {
+      toast.error('Failed to delete payment record')
+    }
+  }
+
+  return (
+    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal" style={{ maxWidth: '750px', width: '95%' }}>
+        <div className="modal-header">
+          <h2 style={{ fontWeight: 700, margin: 0, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <CreditCard size={18} style={{ color: 'var(--brand)' }} /> Salary Payments: {staff.user.name} ({staff.staffType})
+          </h2>
+          <button className="btn-ghost" style={{ padding: '0.375rem' }} onClick={onClose}>✕</button>
+        </div>
+        
+        <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          
+          {/* Record New Payment Form */}
+          <div style={{ background: 'var(--surface-2)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border)' }}>
+            <h3 style={{ fontSize: '0.85rem', fontWeight: 700, margin: '0 0 0.75rem', color: 'var(--brand)' }}>Record New Salary Payment</h3>
+            <form onSubmit={handleAddPayment} style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+              <div className="form-group" style={{ flex: 1, minWidth: '120px', margin: 0 }}>
+                <label className="form-label" style={{ fontSize: '0.75rem', marginBottom: '0.25rem' }}>Month *</label>
+                <input className="input" type="month" required value={form.paymentMonth} onChange={e => set('paymentMonth', e.target.value)} style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem' }} />
+              </div>
+              <div className="form-group" style={{ flex: 1, minWidth: '120px', margin: 0 }}>
+                <label className="form-label" style={{ fontSize: '0.75rem', marginBottom: '0.25rem' }}>Amount (MVR) *</label>
+                <input className="input" type="number" min="0" required value={form.amount} onChange={e => set('amount', e.target.value)} style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem' }} />
+              </div>
+              <div className="form-group" style={{ flex: 2, minWidth: '180px', margin: 0 }}>
+                <label className="form-label" style={{ fontSize: '0.75rem', marginBottom: '0.25rem' }}>Notes</label>
+                <input className="input" value={form.notes} onChange={e => set('notes', e.target.value)} placeholder="e.g. Bank transfer, cash paid..." style={{ padding: '0.4rem 0.6rem', fontSize: '0.85rem' }} />
+              </div>
+              <button type="submit" className="btn-primary" disabled={submitting} style={{ padding: '0.45rem 1rem', height: '36px', fontSize: '0.8rem' }}>
+                {submitting ? 'Recording...' : 'Add Record'}
+              </button>
+            </form>
+          </div>
+
+          {/* Payments List */}
+          <div>
+            <h3 style={{ fontSize: '0.85rem', fontWeight: 700, margin: '0 0 0.75rem' }}>Payment History</h3>
+            
+            {loading ? (
+              <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
+                <Loader2 size={24} className="animate-spin" style={{ color: 'var(--brand)' }} />
+              </div>
+            ) : payments.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', fontSize: '0.85rem', background: 'var(--surface)', border: '1px dashed var(--border)', borderRadius: '8px' }}>
+                No salary payments recorded yet.
+              </div>
+            ) : (
+              <div style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: '8px' }}>
+                <table className="data-table" style={{ fontSize: '0.8rem' }}>
+                  <thead>
+                    <tr style={{ background: 'var(--surface-2)' }}>
+                      <th>Month</th>
+                      <th>Amount</th>
+                      <th>Status</th>
+                      <th>Notes</th>
+                      <th>Receipt</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {payments.map(p => (
+                      <tr key={p.id}>
+                        <td style={{ fontWeight: 700 }}>{p.paymentMonth}</td>
+                        <td>{p.amount?.toLocaleString()} MVR</td>
+                        <td>
+                          <span className={`badge ${
+                            p.status === 'PAID' ? 'badge-green' :
+                            p.status === 'PENDING_VERIFICATION' ? 'badge-orange' : 'badge-gray'
+                          }`} style={{ fontSize: '0.65rem' }}>
+                            {p.status === 'PENDING' ? 'Unpaid' :
+                             p.status === 'PENDING_VERIFICATION' ? 'Awaiting Verification' :
+                             'Paid & Verified'}
+                          </span>
+                        </td>
+                        <td>{p.notes || '—'}</td>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                            {p.receiptUrl ? (
+                              <>
+                                <a href={p.receiptUrl} target="_blank" rel="noopener noreferrer" className="badge badge-purple" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.15rem' }}>
+                                  <FileText size={10} /> View
+                                </a>
+                                {p.status !== 'PAID' && (
+                                  <button type="button" onClick={() => handleClearReceipt(p.id)} style={{ border: 'none', background: 'none', color: '#ef4444', cursor: 'pointer', padding: 0, fontSize: '0.75rem' }} title="Clear receipt">✕</button>
+                                )}
+                              </>
+                            ) : (
+                              <label className="btn-secondary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.65rem', cursor: 'pointer' }}>
+                                <Upload size={10} /> {uploadingPayId === p.id ? '...' : 'Upload'}
+                                <input type="file" style={{ display: 'none' }} accept=".pdf,image/*" onChange={e => handleReceiptUpload(e, p.id)} disabled={uploadingPayId !== null} />
+                              </label>
+                            )}
+                          </div>
+                        </td>
+                        <td>
+                          <button 
+                            className="btn-ghost" 
+                            style={{ padding: '0.25rem', color: '#ef4444' }}
+                            onClick={() => handleDeletePayment(p.id)}
+                            title="Delete record"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+        </div>
+        <div className="modal-footer">
+          <button type="button" className="btn-secondary" onClick={onClose}>Close</button>
+        </div>
       </div>
     </div>
   )

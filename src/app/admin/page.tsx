@@ -56,6 +56,12 @@ export default async function AdminDashboard() {
       take: 10,
     })
 
+    // 4. Fetch salary payments
+    const salaryPayments = await prisma.staffPayment.findMany({
+      where: { staffId: staffProfile.id },
+      orderBy: { paymentMonth: 'desc' },
+    })
+
     return (
       <>
         <TopHeader title="Staff Dashboard" subtitle={`Welcome back, ${user.name?.split(' ')[0]} 👋`} />
@@ -64,6 +70,7 @@ export default async function AdminDashboard() {
             staff={staffProfile}
             groups={coachedGroups}
             recentAttendance={recentAttendance}
+            payments={salaryPayments}
           />
         </div>
       </>
