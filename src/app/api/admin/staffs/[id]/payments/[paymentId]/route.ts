@@ -88,6 +88,10 @@ export async function DELETE(
       return NextResponse.json({ error: 'Payment record not found' }, { status: 404 })
     }
 
+    if (payment.status === 'PAID') {
+      return NextResponse.json({ error: 'Cannot delete a verified/paid payment record' }, { status: 400 })
+    }
+
     await prisma.staffPayment.delete({
       where: { id: payId }
     })

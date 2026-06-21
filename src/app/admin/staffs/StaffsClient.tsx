@@ -712,14 +712,18 @@ function StaffPaymentsModal({ staff, onClose }: any) {
                           </div>
                         </td>
                         <td>
-                          <button 
-                            className="btn-ghost" 
-                            style={{ padding: '0.25rem', color: '#ef4444' }}
-                            onClick={() => handleDeletePayment(p.id)}
-                            title="Delete record"
-                          >
-                            <Trash2 size={13} />
-                          </button>
+                          {p.status !== 'PAID' ? (
+                            <button 
+                              className="btn-ghost" 
+                              style={{ padding: '0.25rem', color: '#ef4444' }}
+                              onClick={() => handleDeletePayment(p.id)}
+                              title="Delete record"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          ) : (
+                            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>—</span>
+                          )}
                         </td>
                       </tr>
                     ))}
