@@ -8,6 +8,7 @@ import {
   CheckSquare, CreditCard, Settings,
   ChevronRight, X
 } from 'lucide-react'
+import { useAdminUser } from '@/components/layout/AdminUserContext'
 
 const navSections = [
   {
@@ -21,6 +22,7 @@ const navSections = [
     items: [
       { href: '/admin/students', icon: Users, label: 'Students' },
       { href: '/admin/parents', icon: UserCheck, label: 'Parents' },
+      { href: '/admin/staffs', icon: Users, label: 'Staffs' },
       { href: '/admin/groups', icon: Trophy, label: 'Training Groups' },
     ]
   },
@@ -44,6 +46,7 @@ const navSections = [
 export default function AdminSidebar() {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
+  const { userRole } = useAdminUser()
 
   useEffect(() => {
     const handleToggle = () => setIsOpen(prev => !prev)
@@ -60,6 +63,18 @@ export default function AdminSidebar() {
   useEffect(() => {
     setIsOpen(false)
   }, [pathname])
+
+  // Filter sections by role
+  const filteredSections = navSections.map((section) => {
+    const filteredItems = section.items.filter((item) => {
+      if (userRole !== 'ADMIN') {
+        const adminPaths = ['/admin/parents', '/admin/payments', '/admin/users', '/admin/settings', '/admin/staffs']
+        return !adminPaths.includes(item.href)
+      }
+      return true
+    })
+    return { ...section, items: filteredItems }
+  }).filter((section) => section.items.length > 0)
 
   return (
     <>
@@ -81,7 +96,9 @@ export default function AdminSidebar() {
             }}>🏀</div>
             <div>
               <div style={{ fontWeight: 800, fontSize: '0.9rem', lineHeight: 1.2, color: 'var(--text)' }}>MBC CRM</div>
-              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Admin Portal</div>
+              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                {userRole === 'ADMIN' ? 'Admin Portal' : 'Staff Portal'}
+              </div>
             </div>
           </div>
           
@@ -96,7 +113,7 @@ export default function AdminSidebar() {
 
         {/* Navigation */}
         <nav className="sidebar-nav">
-          {navSections.map((section) => (
+          {filteredSections.map((section) => (
             <div key={section.title} className="sidebar-section">
               <div className="sidebar-section-title">{section.title}</div>
               {section.items.map((item) => {

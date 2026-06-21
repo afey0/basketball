@@ -1,8 +1,17 @@
 import { prisma } from '@/lib/prisma'
 import TopHeader from '@/components/layout/TopHeader'
 import ParentsClient from './ParentsClient'
+import { auth } from '@/auth'
+import { redirect } from 'next/navigation'
 
 export default async function ParentsPage() {
+  const session = await auth()
+  if (!session) redirect('/auth/login')
+
+  const userRole = (session.user as any)?.role
+  if (userRole !== 'ADMIN') {
+    redirect('/admin')
+  }
   const parents = await prisma.user.findMany({
     where: { role: 'PARENT' },
     include: {

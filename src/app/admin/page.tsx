@@ -1,12 +1,76 @@
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/auth'
+import { redirect } from 'next/navigation'
 import TopHeader from '@/components/layout/TopHeader'
 import DashboardClient from './DashboardClient'
+import StaffDashboardClient from './StaffDashboardClient'
 
 export default async function AdminDashboard() {
   const session = await auth()
+  if (!session) redirect('/auth/login')
 
-  // Fetch all stats in parallel
+  const user = session.user as any
+  const role = user?.role
+
+  if (role === 'COACH') {
+    // 1. Fetch staff profile (or create a default one on the fly if not found)
+    let staffProfile = await prisma.staff.findUnique({
+      where: { userId: parseInt(user.id) },
+      include: { user: true }
+    })
+
+    if (!staffProfile) {
+      staffProfile = await prisma.staff.create({
+        data: {
+          userId: parseInt(user.id),
+          staffType: 'COACH',
+          biography: 'No biography set.',
+          salary: 0,
+        },
+        include: { user: true }
+      })
+    }
+
+    // 2. Fetch coached groups
+    const coachedGroups = await prisma.trainingGroup.findMany({
+      where: { coachId: parseInt(user.id) },
+      include: {
+        _count: { select: { students: true } },
+        schedules: true,
+      },
+      orderBy: { groupName: 'asc' },
+    })
+
+    const groupIds = coachedGroups.map(g => g.id)
+
+    // 3. Fetch recent attendance marked by this user or for these groups
+    const recentAttendance = await prisma.attendance.findMany({
+      where: {
+        trainingGroupId: { in: groupIds },
+      },
+      include: {
+        student: { select: { firstName: true, lastName: true } },
+        trainingGroup: { select: { groupName: true } }
+      },
+      orderBy: { date: 'desc' },
+      take: 10,
+    })
+
+    return (
+      <>
+        <TopHeader title="Staff Dashboard" subtitle={`Welcome back, ${user.name?.split(' ')[0]} 👋`} />
+        <div className="page-content">
+          <StaffDashboardClient
+            staff={staffProfile}
+            groups={coachedGroups}
+            recentAttendance={recentAttendance}
+          />
+        </div>
+      </>
+    )
+  }
+
+  // Fetch all stats in parallel for Admin / Owner
   const now = new Date()
   const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
   const lastMonth = `${now.getFullYear()}-${String(now.getMonth()).padStart(2, '0')}`

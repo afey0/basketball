@@ -5,6 +5,14 @@ import { redirect } from 'next/navigation'
 import PaymentsClient from './PaymentsClient'
 
 export default async function PaymentsPage() {
+  const session = await auth()
+  if (!session) redirect('/auth/login')
+
+  const userRole = (session.user as any)?.role
+  if (userRole !== 'ADMIN') {
+    redirect('/admin')
+  }
+
   const now = new Date()
   const currentMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`
 
