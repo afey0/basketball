@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { Upload, FileText, Check, AlertCircle, Loader2 } from 'lucide-react'
+import { Upload, FileText, Check, AlertCircle, Loader2, CreditCard } from 'lucide-react'
 import { formatCurrency, formatDate, formatMonth } from '@/lib/utils'
 
 interface Props {
@@ -70,7 +70,9 @@ export default function PortalPaymentsClient({ initialChildren }: Props) {
 
   return (
     <div>
-      <h1 style={{ fontWeight: 900, fontSize: '1.5rem', marginBottom: '1.5rem' }}>💰 Payment History</h1>
+      <h1 style={{ fontWeight: 900, fontSize: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <CreditCard size={24} style={{ color: 'var(--brand)' }} /> Payment History
+      </h1>
       
       {children.map(child => {
         const outstanding = child.payments

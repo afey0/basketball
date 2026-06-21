@@ -1,6 +1,7 @@
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
+import { CalendarCheck } from 'lucide-react'
 
 export default async function PortalAttendancePage(props: { searchParams: Promise<{ studentId?: string }> }) {
   const session = await auth()
@@ -26,7 +27,9 @@ export default async function PortalAttendancePage(props: { searchParams: Promis
 
   return (
     <div>
-      <h1 style={{ fontWeight: 900, fontSize: '1.5rem', marginBottom: '1.5rem' }}>✅ Attendance History</h1>
+      <h1 style={{ fontWeight: 900, fontSize: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <CalendarCheck size={24} style={{ color: 'var(--brand)' }} /> Attendance History
+      </h1>
       {children.map(child => {
         const present = child.attendance.filter(a => a.status === 'PRESENT').length
         const rate = child.attendance.length > 0 ? Math.round((present/child.attendance.length)*100) : 0

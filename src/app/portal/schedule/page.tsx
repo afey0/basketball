@@ -1,6 +1,7 @@
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
+import { Calendar, MapPin } from 'lucide-react'
 
 export default async function PortalSchedulePage(props: { searchParams: Promise<{ studentId?: string }> }) {
   const session = await auth()
@@ -31,7 +32,9 @@ export default async function PortalSchedulePage(props: { searchParams: Promise<
 
   return (
     <div>
-      <h1 style={{ fontWeight: 900, fontSize: '1.5rem', marginBottom: '1.5rem' }}>📅 Training Schedule</h1>
+      <h1 style={{ fontWeight: 900, fontSize: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <Calendar size={24} style={{ color: 'var(--brand)' }} /> Training Schedule
+      </h1>
       {children.map(child => (
         <div key={child.id} style={{ marginBottom: '2rem' }}>
           <h2 style={{ fontWeight: 700, fontSize: '1.125rem', marginBottom: '0.875rem' }}>
@@ -57,7 +60,9 @@ export default async function PortalSchedulePage(props: { searchParams: Promise<
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 700 }}>{s.startTime} – {s.endTime}</div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>📍 {s.location}</div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <MapPin size={12} /> {s.location}
+                    </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Coach</div>

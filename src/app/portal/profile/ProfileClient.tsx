@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { Plus, Edit, Trash2, Camera, Loader2, AlertCircle, FileText, Upload } from 'lucide-react'
+import { Plus, Edit, Trash2, Camera, Loader2, AlertCircle, FileText, Upload, AlertTriangle, Users, RefreshCw } from 'lucide-react'
 import { AGE_GROUPS, formatDateForInput } from '@/lib/utils'
 
 interface Props {
@@ -120,8 +120,9 @@ export default function ProfileClient({ initialChildren }: Props) {
                   ))}
                 </div>
                 {child.medicalNotes && (
-                  <div className="alert alert-orange" style={{ marginTop: '1rem', padding: '0.75rem 1rem' }}>
-                    ⚠️ Medical Notes: {child.medicalNotes}
+                  <div className="alert alert-orange" style={{ marginTop: '1rem', padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <AlertTriangle size={16} style={{ flexShrink: 0 }} />
+                    <span>Medical Notes: {child.medicalNotes}</span>
                   </div>
                 )}
               </div>
@@ -130,7 +131,9 @@ export default function ProfileClient({ initialChildren }: Props) {
         ))}
         {children.length === 0 && (
           <div className="empty-state">
-            <div className="empty-state-icon">👦</div>
+            <div className="empty-state-icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Users size={32} style={{ color: 'var(--brand)' }} />
+            </div>
             <div className="empty-state-title">No children added yet</div>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.5rem' }}>Create a child profile using the button above.</p>
           </div>
@@ -468,11 +471,11 @@ function DuplicatePromptModal({ childName, onClose, onRestore, onForceCreate }: 
           </div>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1.5rem' }}>
-          <button className="btn-primary" onClick={onRestore} style={{ justifyContent: 'center' }}>
-            🔄 Restore Existing Profile (Recommended)
+          <button className="btn-primary" onClick={onRestore} style={{ justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <RefreshCw size={14} /> Restore Existing Profile (Recommended)
           </button>
-          <button className="btn-secondary" onClick={onForceCreate} style={{ justifyContent: 'center' }}>
-            ➕ Create New Separate Profile
+          <button className="btn-secondary" onClick={onForceCreate} style={{ justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Plus size={14} /> Create New Separate Profile
           </button>
           <button className="btn-ghost" onClick={onClose} style={{ justifyContent: 'center', fontSize: '0.8rem', padding: '0.5rem' }}>
             Cancel

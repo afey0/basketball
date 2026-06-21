@@ -2,6 +2,7 @@ import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import ProfileClient from './ProfileClient'
+import { Users } from 'lucide-react'
 
 export default async function PortalProfilePage(props: { searchParams: Promise<{ studentId?: string }> }) {
   const session = await auth()
@@ -24,7 +25,9 @@ export default async function PortalProfilePage(props: { searchParams: Promise<{
 
   return (
     <div>
-      <h1 style={{ fontWeight: 900, fontSize: '1.5rem', marginBottom: '1.5rem' }}>👦 Child Profiles</h1>
+      <h1 style={{ fontWeight: 900, fontSize: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <Users size={24} style={{ color: 'var(--brand)' }} /> Child Profiles
+      </h1>
       <ProfileClient key={studentId || 'all'} initialChildren={children} />
     </div>
   )

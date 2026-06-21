@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import { formatCurrency, formatMonth } from '@/lib/utils'
 import Link from 'next/link'
+import { CheckCircle2, XCircle, CreditCard, CalendarCheck, Calendar, User, Users } from 'lucide-react'
 
 export default async function PortalDashboard() {
   const session = await auth()
@@ -32,7 +33,7 @@ export default async function PortalDashboard() {
     <div>
       <div style={{ marginBottom: '2rem' }}>
         <h1 style={{ fontWeight: 900, fontSize: '1.75rem', margin: 0 }}>
-          Welcome back, <span className="gradient-text">{session.user?.name?.split(' ')[0]}</span> 👋
+          Welcome back, <span className="gradient-text">{session.user?.name?.split(' ')[0]}</span>
         </h1>
         <p style={{ color: 'var(--text-muted)', marginTop: '0.375rem' }}>Here's your children's training overview for {formatMonth(currentMonth)}</p>
       </div>
@@ -72,8 +73,14 @@ export default async function PortalDashboard() {
             <div className="grid-4">
               <div className="stat-card">
                 <div className="stat-card-label">This Month Payment</div>
-                <div className="stat-card-value" style={{ fontSize: '1.1rem', color: payment?.status === 'PAID' ? '#166534' : '#b91c1c' }}>
-                  {payment?.status === 'PAID' ? '✅ Paid' : payment ? '🔴 Unpaid' : '—'}
+                <div className="stat-card-value" style={{ fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.35rem', color: payment?.status === 'PAID' ? '#166534' : '#b91c1c' }}>
+                  {payment?.status === 'PAID' ? (
+                    <><CheckCircle2 size={16} /> Paid</>
+                  ) : payment ? (
+                    <><XCircle size={16} /> Unpaid</>
+                  ) : (
+                    '—'
+                  )}
                 </div>
                 {payment && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{formatCurrency(payment.amount)}</div>}
               </div>
@@ -98,10 +105,18 @@ export default async function PortalDashboard() {
             </div>
 
             <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.75rem', flexWrap: 'wrap' }}>
-              <Link href={`/portal/payments?studentId=${child.id}`} className="btn-secondary" style={{ fontSize: '0.8rem' }}>💰 View Payments</Link>
-              <Link href={`/portal/attendance?studentId=${child.id}`} className="btn-secondary" style={{ fontSize: '0.8rem' }}>✅ View Attendance</Link>
-              <Link href={`/portal/schedule?studentId=${child.id}`} className="btn-secondary" style={{ fontSize: '0.8rem' }}>📅 View Schedule</Link>
-              <Link href={`/portal/profile?studentId=${child.id}`} className="btn-secondary" style={{ fontSize: '0.8rem' }}>👦 Profile</Link>
+              <Link href={`/portal/payments?studentId=${child.id}`} className="btn-secondary" style={{ fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                <CreditCard size={14} /> View Payments
+              </Link>
+              <Link href={`/portal/attendance?studentId=${child.id}`} className="btn-secondary" style={{ fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                <CalendarCheck size={14} /> View Attendance
+              </Link>
+              <Link href={`/portal/schedule?studentId=${child.id}`} className="btn-secondary" style={{ fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                <Calendar size={14} /> View Schedule
+              </Link>
+              <Link href={`/portal/profile?studentId=${child.id}`} className="btn-secondary" style={{ fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                <User size={14} /> Profile
+              </Link>
             </div>
           </div>
         )
@@ -109,7 +124,9 @@ export default async function PortalDashboard() {
 
       {children.length === 0 && (
         <div className="empty-state">
-          <div className="empty-state-icon">👦</div>
+          <div className="empty-state-icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Users size={32} style={{ color: 'var(--brand)' }} />
+          </div>
           <div className="empty-state-title">No children linked to your account</div>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '0.5rem' }}>Contact the admin to link your children's profiles.</p>
         </div>
