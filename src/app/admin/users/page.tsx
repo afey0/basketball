@@ -9,7 +9,7 @@ export default async function UsersPage() {
   if (!session) redirect('/auth/login')
   
   const userRole = (session.user as any)?.role
-  if (userRole !== 'ADMIN') {
+  if (userRole !== 'ADMIN' && userRole !== 'VIEWER') {
     redirect('/admin')
   }
 

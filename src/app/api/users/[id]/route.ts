@@ -12,14 +12,19 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
   const id = parseInt(rawId)
   const loggedInUserId = parseInt((session.user as any).id)
   const loggedInUserRole = (session.user as any)?.role
+  const clubId = (session.user as any).clubId
+
+  if (!clubId) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
 
   if (loggedInUserRole !== 'ADMIN' && loggedInUserId !== id) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { id }
+    const user = await prisma.user.findFirst({
+      where: { id, clubId }
     })
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
 
@@ -40,10 +45,23 @@ export async function PUT(req: NextRequest, props: { params: Promise<{ id: strin
 
   const loggedInUserRole = (session.user as any)?.role
   const loggedInUserId = parseInt((session.user as any).id)
+  const clubId = (session.user as any).clubId
+
+  if (!clubId) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
 
   // A user can update their own profile, but only admins can update other profiles
   if (loggedInUserRole !== 'ADMIN' && loggedInUserId !== id) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
+  // Verify the target user belongs to the same club
+  const existingUser = await prisma.user.findFirst({
+    where: { id, clubId }
+  })
+  if (!existingUser) {
+    return NextResponse.json({ error: 'User not found in this club' }, { status: 404 })
   }
 
   // Prevent self-role modification to non-admin or self-deletion to prevent lockouts
@@ -105,6 +123,12 @@ export async function DELETE(req: NextRequest, props: { params: Promise<{ id: st
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const userRole = (session.user as any)?.role
+  const clubId = (session.user as any).clubId
+
+  if (!clubId) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
   if (userRole !== 'ADMIN') {
     return NextResponse.json({ error: 'Forbidden: Admins only' }, { status: 403 })
   }
@@ -115,6 +139,14 @@ export async function DELETE(req: NextRequest, props: { params: Promise<{ id: st
   // Prevent self-deletion
   if (id === parseInt((session.user as any).id)) {
     return NextResponse.json({ error: 'Cannot delete your own admin account' }, { status: 400 })
+  }
+
+  // Verify user belongs to same club
+  const existingUser = await prisma.user.findFirst({
+    where: { id, clubId }
+  })
+  if (!existingUser) {
+    return NextResponse.json({ error: 'User not found in this club' }, { status: 404 })
   }
 
   try {

@@ -13,6 +13,7 @@ interface Props {
 const getRoleBadgeClass = (role: string) => {
   switch (role) {
     case 'ADMIN': return 'badge-purple'
+    case 'VIEWER': return 'badge-green'
     case 'COACH': return 'badge-blue'
     case 'PARENT': return 'badge-orange'
     default: return 'badge-gray'
@@ -77,6 +78,7 @@ export default function UsersClient({ initialUsers, currentUserId }: Props) {
         >
           <option value="ALL">All Roles</option>
           <option value="ADMIN">Administrators</option>
+          <option value="VIEWER">Viewers</option>
           <option value="COACH">Coaches</option>
           <option value="PARENT">Parents</option>
         </select>
@@ -89,6 +91,7 @@ export default function UsersClient({ initialUsers, currentUserId }: Props) {
       <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem' }}>
         <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{filtered.length} accounts shown</span>
         <span style={{ fontSize: '0.8rem', color: '#8b5cf6' }}>{filtered.filter(u => u.role === 'ADMIN').length} admins</span>
+        <span style={{ fontSize: '0.8rem', color: '#10b981' }}>{filtered.filter(u => u.role === 'VIEWER').length} viewers</span>
         <span style={{ fontSize: '0.8rem', color: '#3b82f6' }}>{filtered.filter(u => u.role === 'COACH').length} coaches</span>
         <span style={{ fontSize: '0.8rem', color: '#f97316' }}>{filtered.filter(u => u.role === 'PARENT').length} parents</span>
       </div>
@@ -193,7 +196,7 @@ export default function UsersClient({ initialUsers, currentUserId }: Props) {
 }
 
 function AddUserModal({ onClose, onSave }: any) {
-  const [form, setForm] = useState({ name: '', email: '', phone: '', password: '', role: 'COACH' })
+  const [form, setForm] = useState({ name: '', email: '', phone: '', password: '', role: 'ADMIN' })
   const [loading, setLoading] = useState(false)
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }))
 
@@ -250,8 +253,7 @@ function AddUserModal({ onClose, onSave }: any) {
               <label className="form-label">User Role *</label>
               <select className="select" value={form.role} onChange={e => set('role', e.target.value)}>
                 <option value="ADMIN">Administrator (Full Access)</option>
-                <option value="COACH">Coach (Attendance & Schedules)</option>
-                <option value="PARENT">Parent (Portal Only)</option>
+                <option value="VIEWER">Viewer (Read-Only Access)</option>
               </select>
             </div>
             <div className="form-group">
@@ -335,8 +337,9 @@ function EditUserModal({ user, currentUserId, onClose, onSave }: any) {
                 disabled={user.id === currentUserId}
               >
                 <option value="ADMIN">Administrator (Full Access)</option>
-                <option value="COACH">Coach (Attendance & Schedules)</option>
-                <option value="PARENT">Parent (Portal Only)</option>
+                <option value="VIEWER">Viewer (Read-Only Access)</option>
+                {user.role === 'COACH' && <option value="COACH">Coach (Attendance & Schedules)</option>}
+                {user.role === 'PARENT' && <option value="PARENT">Parent (Portal Only)</option>}
               </select>
               {user.id === currentUserId && (
                 <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>

@@ -9,7 +9,7 @@ export default async function ParentsPage() {
   if (!session) redirect('/auth/login')
 
   const userRole = (session.user as any)?.role
-  if (userRole !== 'ADMIN') {
+  if (userRole !== 'ADMIN' && userRole !== 'VIEWER') {
     redirect('/admin')
   }
   const clubId = parseInt((session.user as any).clubId)

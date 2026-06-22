@@ -25,7 +25,7 @@ export default auth((req) => {
   // Protect portal routes
   if (isPortalRoute) {
     if (!isLoggedIn) return NextResponse.redirect(new URL('/auth/login', req.url))
-    if (role === 'ADMIN' || role === 'COACH') return NextResponse.redirect(new URL('/admin', req.url))
+    if (role === 'ADMIN' || role === 'COACH' || role === 'VIEWER') return NextResponse.redirect(new URL('/admin', req.url))
   }
 
   return NextResponse.next()

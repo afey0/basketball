@@ -67,7 +67,7 @@ export default function AdminSidebar() {
   // Filter sections by role
   const filteredSections = navSections.map((section) => {
     const filteredItems = section.items.filter((item) => {
-      if (userRole !== 'ADMIN') {
+      if (userRole !== 'ADMIN' && userRole !== 'VIEWER') {
         const adminPaths = ['/admin/parents', '/admin/payments', '/admin/users', '/admin/settings', '/admin/staffs']
         return !adminPaths.includes(item.href)
       }

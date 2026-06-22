@@ -31,10 +31,8 @@ export async function POST(req: NextRequest) {
   const session = await auth()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const userRole = (session.user as any)?.role
-  if (userRole !== 'ADMIN') {
-    return NextResponse.json({ error: 'Forbidden: Admins only' }, { status: 403 })
-  }
+  const clubId = (session.user as any).clubId
+  if (!clubId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   try {
     const body = await req.json()
@@ -44,7 +42,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    if (!['ADMIN', 'COACH', 'PARENT'].includes(role)) {
+    if (!['ADMIN', 'VIEWER'].includes(role)) {
       return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
     }
 
@@ -61,6 +59,7 @@ export async function POST(req: NextRequest) {
         password: hashedPassword,
         phone: phone || null,
         role,
+        clubId,
       },
     })
 
