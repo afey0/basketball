@@ -1,10 +1,17 @@
 import { prisma } from '@/lib/prisma'
 import TopHeader from '@/components/layout/TopHeader'
 import StudentsClient from './StudentsClient'
+import { auth } from '@/auth'
+import { redirect } from 'next/navigation'
 
 export default async function StudentsPage() {
+  const session = await auth()
+  if (!session) redirect('/auth/login')
+  const clubId = parseInt((session.user as any).clubId)
+
   const [students, groups, parents] = await Promise.all([
     prisma.student.findMany({
+      where: { clubId },
       include: {
         trainingGroup: { select: { groupName: true, ageGroup: true } },
         parent: { select: { name: true, email: true, phone: true } },
@@ -15,8 +22,8 @@ export default async function StudentsPage() {
       },
       orderBy: [{ status: 'asc' }, { firstName: 'asc' }]
     }),
-    prisma.trainingGroup.findMany({ orderBy: { groupName: 'asc' } }),
-    prisma.user.findMany({ where: { role: 'PARENT' }, orderBy: { name: 'asc' } }),
+    prisma.trainingGroup.findMany({ where: { clubId }, orderBy: { groupName: 'asc' } }),
+    prisma.user.findMany({ where: { role: 'PARENT', clubId }, orderBy: { name: 'asc' } }),
   ])
 
   return (

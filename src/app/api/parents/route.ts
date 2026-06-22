@@ -6,9 +6,10 @@ import bcrypt from 'bcryptjs'
 export async function GET() {
   const session = await auth()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const clubId = parseInt((session.user as any).clubId)
 
   const parents = await prisma.user.findMany({
-    where: { role: 'PARENT' },
+    where: { role: 'PARENT', clubId },
     include: {
       parentStudents: {
         select: { id: true, firstName: true, lastName: true, status: true, trainingGroup: { select: { groupName: true } } }
@@ -22,6 +23,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const session = await auth()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const clubId = parseInt((session.user as any).clubId)
 
   const body = await req.json()
   if (!body.name || !body.email || !body.phone) {
@@ -43,6 +45,7 @@ export async function POST(req: NextRequest) {
         password: hashedPassword,
         phone: body.phone,
         role: 'PARENT',
+        clubId,
       },
     })
     const { password: _, ...safeParent } = parent

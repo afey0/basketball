@@ -19,12 +19,21 @@ export async function PUT(
     const staffId = parseInt(id)
     const payId = parseInt(paymentId)
 
-    const payment = await prisma.staffPayment.findUnique({
-      where: { id: payId }
+    const clubId = (session.user as any).clubId
+    if (!clubId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
+    const payment = await prisma.staffPayment.findFirst({
+      where: {
+        id: payId,
+        staff: {
+          id: staffId,
+          user: { clubId }
+        }
+      }
     })
 
-    if (!payment || payment.staffId !== staffId) {
-      return NextResponse.json({ error: 'Payment record not found' }, { status: 404 })
+    if (!payment) {
+      return NextResponse.json({ error: 'Payment record not found in this club' }, { status: 404 })
     }
 
     const body = await req.json()
@@ -80,12 +89,21 @@ export async function DELETE(
     const staffId = parseInt(id)
     const payId = parseInt(paymentId)
 
-    const payment = await prisma.staffPayment.findUnique({
-      where: { id: payId }
+    const clubId = (session.user as any).clubId
+    if (!clubId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
+    const payment = await prisma.staffPayment.findFirst({
+      where: {
+        id: payId,
+        staff: {
+          id: staffId,
+          user: { clubId }
+        }
+      }
     })
 
-    if (!payment || payment.staffId !== staffId) {
-      return NextResponse.json({ error: 'Payment record not found' }, { status: 404 })
+    if (!payment) {
+      return NextResponse.json({ error: 'Payment record not found in this club' }, { status: 404 })
     }
 
     if (payment.status === 'PAID') {

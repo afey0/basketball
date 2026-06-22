@@ -16,11 +16,13 @@ model User {
   email     String   @unique
   password  String
   phone     String?
-  role      String   @default("PARENT") // ADMIN, COACH, PARENT
+  role      String   @default("PARENT") // SUPERADMIN, ADMIN, COACH, PARENT
+  clubId    Int?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Relations
+  club             Club?            @relation(fields: [clubId], references: [id], onDelete: Cascade)
   coachGroups      TrainingGroup[]  @relation("CoachGroups")
   parentStudents   Student[]        @relation("ParentStudents")
   markedAttendance Attendance[]     @relation("MarkedBy")
@@ -42,6 +44,7 @@ model Student {
   medicalNotes    String?
   enrollmentDate  DateTime @default(now())
   status          String   @default("ACTIVE") // ACTIVE, INACTIVE, SUSPENDED
+  clubId          Int?
   createdAt       DateTime @default(now())
 
   // Foreign keys
@@ -49,6 +52,7 @@ model Student {
   parentId        Int?
 
   // Relations
+  club          Club?          @relation(fields: [clubId], references: [id], onDelete: Cascade)
   trainingGroup TrainingGroup? @relation(fields: [trainingGroupId], references: [id])
   parent        User?          @relation("ParentStudents", fields: [parentId], references: [id])
   attendance    Attendance[]
@@ -61,12 +65,14 @@ model TrainingGroup {
   ageGroup    String
   maxCapacity Int      @default(20)
   description String?
+  clubId      Int?
   createdAt   DateTime @default(now())
 
   // Foreign keys
   coachId Int?
 
   // Relations
+  club        Club?         @relation(fields: [clubId], references: [id], onDelete: Cascade)
   coach       User?         @relation("CoachGroups", fields: [coachId], references: [id])
   students    Student[]
   schedules   Schedule[]
@@ -148,6 +154,7 @@ model PaymentPlan {
 
 model ClubSettings {
   id              Int    @id @default(autoincrement())
+  clubId          Int    @unique
   clubName        String @default("Basketball Training Club")
   clubLogo        String?
   contactEmail    String?
@@ -161,6 +168,24 @@ model ClubSettings {
   smtpFromName    String?
   currency        String @default("MVR")
   updatedAt       DateTime @updatedAt
+
+  // Relation
+  club            Club   @relation(fields: [clubId], references: [id], onDelete: Cascade)
+}
+
+model Club {
+  id        Int      @id @default(autoincrement())
+  name      String
+  slug      String   @unique
+  logo      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  users          User[]
+  students       Student[]
+  trainingGroups TrainingGroup[]
+  settings       ClubSettings?
 }
 
 model Staff {

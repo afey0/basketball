@@ -1,16 +1,21 @@
 import { prisma } from '@/lib/prisma'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import TopHeader from '@/components/layout/TopHeader'
 import Link from 'next/link'
 import { ChevronLeft, Users } from 'lucide-react'
 import { formatDate, calculateAge } from '@/lib/utils'
+import { auth } from '@/auth'
 
 export default async function GroupDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const session = await auth()
+  if (!session) redirect('/auth/login')
+  const clubId = parseInt((session.user as any).clubId)
+
   const { id: rawId } = await params
   const id = parseInt(rawId)
 
-  const group = await prisma.trainingGroup.findUnique({
-    where: { id },
+  const group = await prisma.trainingGroup.findFirst({
+    where: { id, clubId },
     include: {
       coach: { select: { name: true, email: true } },
       students: {

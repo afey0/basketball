@@ -7,6 +7,7 @@ import { sendPasswordResetEmail } from '@/lib/email'
 export async function PUT(req: NextRequest, props: { params: Promise<{ id: string }> }) {
   const session = await auth()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const clubId = parseInt((session.user as any).clubId)
 
   const { id: rawId } = await props.params
   const id = parseInt(rawId)
@@ -17,6 +18,14 @@ export async function PUT(req: NextRequest, props: { params: Promise<{ id: strin
 
   if (loggedInUserRole !== 'ADMIN' && loggedInUserId !== id) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
+  // Ensure target parent belongs to the same club
+  const targetParent = await prisma.user.findFirst({
+    where: { id, role: 'PARENT', clubId }
+  })
+  if (!targetParent) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
   if (body.phone !== undefined && !body.phone) {
@@ -57,7 +66,7 @@ export async function PUT(req: NextRequest, props: { params: Promise<{ id: strin
     })
 
     if (body.password) {
-      sendPasswordResetEmail(updated.email, updated.name, updated.role, body.password)
+      sendPasswordResetEmail(updated.email, updated.name, updated.role, body.password, clubId)
         .catch(err => console.error('Failed to send password reset email:', err))
     }
 
@@ -72,6 +81,7 @@ export async function PUT(req: NextRequest, props: { params: Promise<{ id: strin
 export async function DELETE(req: NextRequest, props: { params: Promise<{ id: string }> }) {
   const session = await auth()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const clubId = parseInt((session.user as any).clubId)
 
   const loggedInUserRole = (session.user as any).role
   if (loggedInUserRole !== 'ADMIN') {
@@ -81,9 +91,16 @@ export async function DELETE(req: NextRequest, props: { params: Promise<{ id: st
   const { id: rawId } = await props.params
   const id = parseInt(rawId)
 
+  // Ensure target parent belongs to the same club
+  const targetParent = await prisma.user.findFirst({
+    where: { id, role: 'PARENT', clubId }
+  })
+  if (!targetParent) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  }
+
   try {
     // Delete the parent (or optionally unlink students, etc.)
-    // Note: SQLite onDelete cascade or manual handle. Let's just unlink student parentId
     await prisma.student.updateMany({
       where: { parentId: id },
       data: { parentId: null }

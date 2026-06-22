@@ -13,6 +13,10 @@ export default async function AdminLayout({
   if (!session) redirect('/auth/login')
 
   const user = session.user as any
+  const role = user?.role
+
+  if (role === 'SUPERADMIN') redirect('/super-admin')
+  if (role === 'PARENT') redirect('/portal')
 
   return (
     <SessionProvider session={session}>

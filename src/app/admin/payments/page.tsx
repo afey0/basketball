@@ -16,9 +16,11 @@ export default async function PaymentsPage() {
   const now = new Date()
   const currentMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`
 
+  const clubId = parseInt((session.user as any).clubId)
+
   const [payments, groups, settings] = await Promise.all([
     prisma.payment.findMany({
-      where: { paymentMonth: currentMonth },
+      where: { paymentMonth: currentMonth, student: { clubId } },
       include: {
         student: {
           select: {
@@ -30,8 +32,8 @@ export default async function PaymentsPage() {
       },
       orderBy: [{ status: 'asc' }, { student: { firstName: 'asc' } }],
     }),
-    prisma.trainingGroup.findMany({ orderBy: { groupName: 'asc' } }),
-    prisma.clubSettings.findFirst(),
+    prisma.trainingGroup.findMany({ where: { clubId }, orderBy: { groupName: 'asc' } }),
+    prisma.clubSettings.findUnique({ where: { clubId } }),
   ])
 
   return (

@@ -21,9 +21,12 @@ export async function POST(req: NextRequest) {
   }
   const dueDate = new Date(yr, mo - 1, dueDay)
 
-  // Get all active students with their payment plans
+  const clubId = (session.user as any).clubId
+  if (!clubId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
+  // Get all active students with their payment plans for this club
   const students = await prisma.student.findMany({
-    where: { status: 'ACTIVE', trainingGroupId: { not: null } },
+    where: { status: 'ACTIVE', clubId: clubId, trainingGroupId: { not: null } },
     include: { trainingGroup: { include: { paymentPlan: true } } },
   })
 

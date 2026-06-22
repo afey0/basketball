@@ -5,11 +5,12 @@ import { auth } from '@/auth'
 export async function GET(req: NextRequest, props: { params: Promise<{ id: string }> }) {
   const session = await auth()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const clubId = parseInt((session.user as any).clubId)
 
   const { id: rawId } = await props.params
   const id = parseInt(rawId)
-  const student = await prisma.student.findUnique({
-    where: { id },
+  const student = await prisma.student.findFirst({
+    where: { id, clubId },
     include: {
       trainingGroup: { include: { schedules: true, coach: true } },
       parent: true,
@@ -24,10 +25,16 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
 export async function PUT(req: NextRequest, props: { params: Promise<{ id: string }> }) {
   const session = await auth()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const clubId = parseInt((session.user as any).clubId)
 
   const { id: rawId } = await props.params
   const id = parseInt(rawId)
   const body = await req.json()
+
+  const existing = await prisma.student.findFirst({
+    where: { id, clubId }
+  })
+  if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   const dob = body.dateOfBirth ? new Date(body.dateOfBirth) : undefined
   if (dob && isNaN(dob.getTime())) {
@@ -80,9 +87,16 @@ export async function PUT(req: NextRequest, props: { params: Promise<{ id: strin
 export async function DELETE(req: NextRequest, props: { params: Promise<{ id: string }> }) {
   const session = await auth()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const clubId = parseInt((session.user as any).clubId)
 
   const { id: rawId } = await props.params
   const id = parseInt(rawId)
+
+  const existing = await prisma.student.findFirst({
+    where: { id, clubId }
+  })
+  if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
   await prisma.student.update({ where: { id }, data: { status: 'INACTIVE' } })
   return NextResponse.json({ success: true })
 }

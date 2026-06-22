@@ -17,6 +17,16 @@ export async function GET(
   const { id } = await params
   const staffId = parseInt(id)
 
+  const clubId = (session.user as any).clubId
+  if (!clubId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
+  const staff = await prisma.staff.findFirst({
+    where: { id: staffId, user: { clubId } }
+  })
+  if (!staff) {
+    return NextResponse.json({ error: 'Staff member not found in this club' }, { status: 404 })
+  }
+
   const payments = await prisma.staffPayment.findMany({
     where: { staffId },
     orderBy: { paymentMonth: 'desc' }
@@ -41,12 +51,15 @@ export async function POST(
     const { id } = await params
     const staffId = parseInt(id)
 
-    const staff = await prisma.staff.findUnique({
-      where: { id: staffId }
+    const clubId = (session.user as any).clubId
+    if (!clubId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
+    const staff = await prisma.staff.findFirst({
+      where: { id: staffId, user: { clubId } }
     })
 
     if (!staff) {
-      return NextResponse.json({ error: 'Staff member not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Staff member not found in this club' }, { status: 404 })
     }
 
     const body = await req.json()

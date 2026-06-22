@@ -12,7 +12,13 @@ export async function GET() {
     return NextResponse.json({ error: 'Forbidden: Admins only' }, { status: 403 })
   }
 
+  const clubId = (session.user as any).clubId
+  if (!clubId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
   const staffs = await prisma.staff.findMany({
+    where: {
+      user: { clubId: clubId }
+    },
     include: {
       user: {
         select: {
@@ -43,6 +49,9 @@ export async function POST(req: NextRequest) {
   if (userRole !== 'ADMIN') {
     return NextResponse.json({ error: 'Forbidden: Admins only' }, { status: 403 })
   }
+
+  const clubId = (session.user as any).clubId
+  if (!clubId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   try {
     const body = await req.json()
@@ -80,6 +89,7 @@ export async function POST(req: NextRequest) {
           password: hashedPassword,
           phone: phone || null,
           role: 'COACH', // All staffs are given the COACH role to grant them access to dashboard/attendance
+          clubId, // Set the clubId!
         }
       })
 

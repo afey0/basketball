@@ -1,8 +1,10 @@
 import nodemailer from 'nodemailer'
 import { prisma } from './prisma'
 
-export async function getEmailTransport() {
-  const settings = await prisma.clubSettings.findFirst()
+export async function getEmailTransport(clubId?: number) {
+  const settings = clubId
+    ? await prisma.clubSettings.findUnique({ where: { clubId } })
+    : await prisma.clubSettings.findFirst()
 
   const host = settings?.smtpHost || process.env.SMTP_HOST || 'smtp.gmail.com'
   const port = settings?.smtpPort || parseInt(process.env.SMTP_PORT || '587')
@@ -26,11 +28,14 @@ export async function sendPaymentReminder(
   studentName: string,
   amount: number,
   month: string,
-  dueDate: string
+  dueDate: string,
+  clubId?: number
 ) {
   try {
-    const { transport, from } = await getEmailTransport()
-    const settings = await prisma.clubSettings.findFirst()
+    const { transport, from } = await getEmailTransport(clubId)
+    const settings = clubId
+      ? await prisma.clubSettings.findUnique({ where: { clubId } })
+      : await prisma.clubSettings.findFirst()
     const clubName = settings?.clubName || 'Basketball Club'
 
     await transport.sendMail({
@@ -72,11 +77,14 @@ export async function sendOverdueNotice(
   studentName: string,
   amount: number,
   month: string,
-  daysOverdue: number
+  daysOverdue: number,
+  clubId?: number
 ) {
   try {
-    const { transport, from } = await getEmailTransport()
-    const settings = await prisma.clubSettings.findFirst()
+    const { transport, from } = await getEmailTransport(clubId)
+    const settings = clubId
+      ? await prisma.clubSettings.findUnique({ where: { clubId } })
+      : await prisma.clubSettings.findFirst()
     const clubName = settings?.clubName || 'Basketball Club'
 
     await transport.sendMail({
@@ -117,11 +125,14 @@ export async function sendSlipUploadNotification(
   parentName: string,
   studentName: string,
   amount: number,
-  month: string
+  month: string,
+  clubId?: number
 ) {
   try {
-    const { transport, from } = await getEmailTransport()
-    const settings = await prisma.clubSettings.findFirst()
+    const { transport, from } = await getEmailTransport(clubId)
+    const settings = clubId
+      ? await prisma.clubSettings.findUnique({ where: { clubId } })
+      : await prisma.clubSettings.findFirst()
     const clubName = settings?.clubName || 'Basketball Club'
 
     await transport.sendMail({
@@ -161,11 +172,14 @@ export async function sendPasswordResetEmail(
   email: string,
   name: string,
   role: string,
-  newPassword?: string
+  newPassword?: string,
+  clubId?: number
 ) {
   try {
-    const { transport, from } = await getEmailTransport()
-    const settings = await prisma.clubSettings.findFirst()
+    const { transport, from } = await getEmailTransport(clubId)
+    const settings = clubId
+      ? await prisma.clubSettings.findUnique({ where: { clubId } })
+      : await prisma.clubSettings.findFirst()
     const clubName = settings?.clubName || 'Basketball Club'
 
     await transport.sendMail({
@@ -209,7 +223,8 @@ export async function sendTestEmail(
     smtpUser?: string
     smtpPassword?: string
     smtpFromName?: string
-  }
+  },
+  clubId?: number
 ) {
   try {
     let host = config?.smtpHost
@@ -219,7 +234,9 @@ export async function sendTestEmail(
     let fromName = config?.smtpFromName
 
     if (!host || !user) {
-      const settings = await prisma.clubSettings.findFirst()
+      const settings = clubId
+        ? await prisma.clubSettings.findUnique({ where: { clubId } })
+        : await prisma.clubSettings.findFirst()
       host = host || settings?.smtpHost || process.env.SMTP_HOST || 'smtp.gmail.com'
       port = port || settings?.smtpPort || parseInt(process.env.SMTP_PORT || '587')
       user = user || settings?.smtpUser || process.env.SMTP_USER || ''

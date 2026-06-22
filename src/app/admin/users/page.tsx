@@ -13,7 +13,10 @@ export default async function UsersPage() {
     redirect('/admin')
   }
 
+  const clubId = parseInt((session.user as any).clubId)
+
   const users = await prisma.user.findMany({
+    where: { clubId },
     orderBy: { name: 'asc' },
   })
 

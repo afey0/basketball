@@ -11,6 +11,14 @@ export default async function AdminDashboard() {
 
   const user = session.user as any
   const role = user?.role
+  const clubId = user?.clubId ? parseInt(String(user.clubId)) : undefined
+
+  if (role === 'SUPERADMIN') {
+    redirect('/super-admin')
+  }
+  if (role === 'PARENT') {
+    redirect('/portal')
+  }
 
   if (role === 'COACH') {
     // 1. Fetch staff profile (or create a default one on the fly if not found)
@@ -98,18 +106,18 @@ export default async function AdminDashboard() {
     currentMonthStaffPending,
     currentMonthStaffUnpaid,
   ] = await Promise.all([
-    prisma.student.count({ where: { status: 'ACTIVE' } }),
-    prisma.trainingGroup.count(),
+    prisma.student.count({ where: { status: 'ACTIVE', clubId } }),
+    prisma.trainingGroup.count({ where: { clubId } }),
     prisma.payment.aggregate({
-      where: { paymentMonth: currentMonth, status: 'PAID' },
+      where: { paymentMonth: currentMonth, status: 'PAID', student: { clubId } },
       _sum: { amount: true },
     }),
     prisma.payment.aggregate({
-      where: { paymentMonth: lastMonth, status: 'PAID' },
+      where: { paymentMonth: lastMonth, status: 'PAID', student: { clubId } },
       _sum: { amount: true },
     }),
     prisma.payment.findMany({
-      where: { status: 'OVERDUE' },
+      where: { status: 'OVERDUE', student: { clubId } },
       include: {
         student: { select: { firstName: true, lastName: true, trainingGroup: { select: { groupName: true } } } },
       },
@@ -117,13 +125,13 @@ export default async function AdminDashboard() {
       take: 8,
     }),
     prisma.attendance.findMany({
-      where: { date: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } },
+      where: { date: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) }, student: { clubId } },
       include: { student: { select: { firstName: true, lastName: true } }, trainingGroup: { select: { groupName: true } } },
       orderBy: { date: 'desc' },
       take: 10,
     }),
     prisma.schedule.findMany({
-      where: { isActive: true },
+      where: { isActive: true, trainingGroup: { clubId } },
       include: { trainingGroup: { select: { groupName: true, ageGroup: true } } },
     }),
     // Revenue for last 6 months
@@ -132,19 +140,20 @@ export default async function AdminDashboard() {
       d.setMonth(d.getMonth() - (5 - i))
       const m = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
       return prisma.payment.aggregate({
-        where: { paymentMonth: m, status: 'PAID' },
+        where: { paymentMonth: m, status: 'PAID', student: { clubId } },
         _sum: { amount: true },
       }).then(r => ({ month: m, revenue: r._sum.amount || 0 }))
     })),
     // Attendance rate by group
     prisma.trainingGroup.findMany({
+      where: { clubId },
       include: {
         _count: { select: { attendance: true, students: true } },
       },
     }),
     // Unpaid this month
     prisma.payment.findMany({
-      where: { paymentMonth: currentMonth, status: { in: ['UNPAID', 'OVERDUE'] } },
+      where: { paymentMonth: currentMonth, status: { in: ['UNPAID', 'OVERDUE'] }, student: { clubId } },
       include: {
         student: { select: { firstName: true, lastName: true, trainingGroup: { select: { groupName: true } } } },
       },
@@ -152,7 +161,7 @@ export default async function AdminDashboard() {
     }),
     // Pending slips
     prisma.payment.findMany({
-      where: { status: 'PENDING' },
+      where: { status: 'PENDING', student: { clubId } },
       include: {
         student: { select: { firstName: true, lastName: true, parent: { select: { name: true } } } },
       },
@@ -160,22 +169,22 @@ export default async function AdminDashboard() {
     }),
     // Staff payment queries
     prisma.staffPayment.aggregate({
-      where: { paymentMonth: currentMonth, status: 'PAID' },
+      where: { paymentMonth: currentMonth, status: 'PAID', staff: { user: { clubId } } },
       _sum: { amount: true },
     }),
     prisma.staffPayment.aggregate({
-      where: { paymentMonth: currentMonth, status: 'PENDING_VERIFICATION' },
+      where: { paymentMonth: currentMonth, status: 'PENDING_VERIFICATION', staff: { user: { clubId } } },
       _sum: { amount: true },
     }),
     prisma.staffPayment.aggregate({
-      where: { paymentMonth: currentMonth, status: 'PENDING' },
+      where: { paymentMonth: currentMonth, status: 'PENDING', staff: { user: { clubId } } },
       _sum: { amount: true },
     }),
   ])
 
   // Payment collection rate
-  const totalCurrentMonth = await prisma.payment.count({ where: { paymentMonth: currentMonth } })
-  const paidCurrentMonth = await prisma.payment.count({ where: { paymentMonth: currentMonth, status: 'PAID' } })
+  const totalCurrentMonth = await prisma.payment.count({ where: { paymentMonth: currentMonth, student: { clubId } } })
+  const paidCurrentMonth = await prisma.payment.count({ where: { paymentMonth: currentMonth, status: 'PAID', student: { clubId } } })
   const collectionRate = totalCurrentMonth > 0 ? Math.round((paidCurrentMonth / totalCurrentMonth) * 100) : 0
 
   const stats = {

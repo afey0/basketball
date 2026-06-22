@@ -13,9 +13,11 @@ export default async function StaffsPage() {
     redirect('/admin')
   }
 
+  const clubId = parseInt((session.user as any).clubId)
+
   // Ensure all existing coaches have a Staff record (auto-migration/on-the-fly seeding)
   const coaches = await prisma.user.findMany({
-    where: { role: 'COACH' }
+    where: { role: 'COACH', clubId }
   })
 
   for (const coach of coaches) {
@@ -36,6 +38,9 @@ export default async function StaffsPage() {
 
   // Query all staff records including User accounts
   const staffs = await prisma.staff.findMany({
+    where: {
+      user: { clubId }
+    },
     include: {
       user: {
         select: {

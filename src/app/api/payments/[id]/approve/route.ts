@@ -23,10 +23,13 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
       return NextResponse.json({ error: 'Invalid action. Must be APPROVE or REJECT' }, { status: 400 })
     }
 
-    const payment = await prisma.payment.findUnique({
-      where: { id: paymentId },
+    const clubId = (session.user as any).clubId
+    if (!clubId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
+    const payment = await prisma.payment.findFirst({
+      where: { id: paymentId, student: { clubId } },
     })
-    if (!payment) return NextResponse.json({ error: 'Payment not found' }, { status: 404 })
+    if (!payment) return NextResponse.json({ error: 'Payment not found in this club' }, { status: 404 })
 
     let updated
     const userId = parseInt((session.user as any).id)

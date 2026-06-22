@@ -5,8 +5,10 @@ import { auth } from '@/auth'
 export async function GET() {
   const session = await auth()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const clubId = parseInt((session.user as any).clubId)
 
   const groups = await prisma.trainingGroup.findMany({
+    where: { clubId },
     include: {
       coach: { select: { id: true, name: true, email: true } },
       _count: { select: { students: true } },
@@ -21,10 +23,12 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const session = await auth()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const clubId = parseInt((session.user as any).clubId)
 
   const body = await req.json()
   const group = await prisma.trainingGroup.create({
     data: {
+      clubId,
       groupName: body.groupName,
       ageGroup: body.ageGroup,
       coachId: body.coachId || null,

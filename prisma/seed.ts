@@ -15,10 +15,20 @@ async function main() {
   await prisma.trainingGroup.deleteMany()
   await prisma.user.deleteMany()
   await prisma.clubSettings.deleteMany()
+  await prisma.club.deleteMany()
+
+  // Create default Club
+  const defaultClub = await prisma.club.create({
+    data: {
+      name: 'Maldives Basketball Club',
+      slug: 'mbc',
+    }
+  })
 
   // Club Settings
   await prisma.clubSettings.create({
     data: {
+      clubId: defaultClub.id,
       clubName: 'Maldives Basketball Club',
       contactEmail: 'admin@mbc.mv',
       contactPhone: '+960 300-0000',
@@ -37,6 +47,7 @@ async function main() {
       password: adminPassword,
       phone: '+960 777-0001',
       role: 'ADMIN',
+      clubId: defaultClub.id,
     },
   })
 
@@ -49,6 +60,7 @@ async function main() {
       password: coachPassword,
       phone: '+960 777-0002',
       role: 'COACH',
+      clubId: defaultClub.id,
     },
   })
   const coach2 = await prisma.user.create({
@@ -58,6 +70,7 @@ async function main() {
       password: coachPassword,
       phone: '+960 777-0003',
       role: 'COACH',
+      clubId: defaultClub.id,
     },
   })
 
@@ -70,6 +83,7 @@ async function main() {
       password: parentPassword,
       phone: '+960 777-1001',
       role: 'PARENT',
+      clubId: defaultClub.id,
     },
   })
   const parent2 = await prisma.user.create({
@@ -79,6 +93,7 @@ async function main() {
       password: parentPassword,
       phone: '+960 777-1002',
       role: 'PARENT',
+      clubId: defaultClub.id,
     },
   })
   const parent3 = await prisma.user.create({
@@ -88,6 +103,20 @@ async function main() {
       password: parentPassword,
       phone: '+960 777-1003',
       role: 'PARENT',
+      clubId: defaultClub.id,
+    },
+  })
+
+  // Super Admin
+  const superAdminPassword = await bcrypt.hash('superadmin123', 12)
+  await prisma.user.create({
+    data: {
+      name: 'Global Super Admin',
+      email: 'superadmin@bball.crm',
+      password: superAdminPassword,
+      phone: '+960 777-9999',
+      role: 'SUPERADMIN',
+      clubId: null,
     },
   })
 
@@ -99,6 +128,7 @@ async function main() {
       coachId: coach1.id,
       maxCapacity: 15,
       description: 'Beginner program for our youngest ballers aged 6-8.',
+      clubId: defaultClub.id,
     },
   })
   const group2 = await prisma.trainingGroup.create({
@@ -108,6 +138,7 @@ async function main() {
       coachId: coach1.id,
       maxCapacity: 20,
       description: 'Intermediate training for players aged 9-12.',
+      clubId: defaultClub.id,
     },
   })
   const group3 = await prisma.trainingGroup.create({
@@ -117,6 +148,7 @@ async function main() {
       coachId: coach2.id,
       maxCapacity: 18,
       description: 'Advanced competitive training for players aged 13-16.',
+      clubId: defaultClub.id,
     },
   })
 
@@ -184,6 +216,7 @@ async function main() {
         parentId: s.parentId,
         enrollmentDate: new Date('2025-09-01'),
         status: 'ACTIVE',
+        clubId: defaultClub.id,
       },
     })
     students.push({ ...student, groupId: s.groupId })
@@ -261,6 +294,7 @@ async function main() {
 
   console.log('✅ Seed complete!')
   console.log('\nTest accounts:')
+  console.log('  Super Admin: superadmin@bball.crm / superadmin123')
   console.log('  Admin:  admin@mbc.mv / admin123')
   console.log('  Coach:  ibrahim@mbc.mv / coach123')
   console.log('  Parent: mohamed@gmail.com / parent123')

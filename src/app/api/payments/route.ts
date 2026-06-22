@@ -6,6 +6,9 @@ export async function GET(req: NextRequest) {
   const session = await auth()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  const clubId = (session.user as any).clubId
+  if (!clubId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
   const { searchParams } = new URL(req.url)
   const month = searchParams.get('month')
   const status = searchParams.get('status')
@@ -13,9 +16,12 @@ export async function GET(req: NextRequest) {
 
   const payments = await prisma.payment.findMany({
     where: {
+      student: {
+        clubId: clubId,
+        ...(group ? { trainingGroupId: parseInt(group) } : {}),
+      },
       ...(month ? { paymentMonth: month } : {}),
       ...(status && status !== 'ALL' ? { status } : {}),
-      ...(group ? { student: { trainingGroupId: parseInt(group) } } : {}),
     },
     include: {
       student: {
@@ -36,7 +42,18 @@ export async function POST(req: NextRequest) {
   const session = await auth()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  const clubId = (session.user as any).clubId
+  if (!clubId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
   const body = await req.json()
+
+  // Verify the student belongs to the same club
+  const student = await prisma.student.findFirst({
+    where: { id: body.studentId, clubId: clubId }
+  })
+  if (!student) {
+    return NextResponse.json({ error: 'Student not found in this club' }, { status: 404 })
+  }
 
   const payment = await prisma.payment.create({
     data: {

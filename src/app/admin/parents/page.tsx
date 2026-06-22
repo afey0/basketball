@@ -12,8 +12,9 @@ export default async function ParentsPage() {
   if (userRole !== 'ADMIN') {
     redirect('/admin')
   }
+  const clubId = parseInt((session.user as any).clubId)
   const parents = await prisma.user.findMany({
-    where: { role: 'PARENT' },
+    where: { role: 'PARENT', clubId },
     include: {
       parentStudents: {
         select: {

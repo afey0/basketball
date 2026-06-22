@@ -1,16 +1,21 @@
 import { prisma } from '@/lib/prisma'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import TopHeader from '@/components/layout/TopHeader'
 import StudentDetailClient from './StudentDetailClient'
 import Link from 'next/link'
 import { ChevronLeft } from 'lucide-react'
+import { auth } from '@/auth'
 
 export default async function StudentDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const session = await auth()
+  if (!session) redirect('/auth/login')
+  const clubId = parseInt((session.user as any).clubId)
+
   const { id: rawId } = await params
   const id = parseInt(rawId)
 
-  const student = await prisma.student.findUnique({
-    where: { id },
+  const student = await prisma.student.findFirst({
+    where: { id, clubId },
     include: {
       trainingGroup: {
         include: {
@@ -27,8 +32,8 @@ export default async function StudentDetailPage({ params }: { params: Promise<{ 
 
   if (!student) notFound()
 
-  const groups = await prisma.trainingGroup.findMany({ orderBy: { groupName: 'asc' } })
-  const parents = await prisma.user.findMany({ where: { role: 'PARENT' }, orderBy: { name: 'asc' } })
+  const groups = await prisma.trainingGroup.findMany({ where: { clubId }, orderBy: { groupName: 'asc' } })
+  const parents = await prisma.user.findMany({ where: { role: 'PARENT', clubId }, orderBy: { name: 'asc' } })
 
   return (
     <>

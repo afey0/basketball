@@ -6,8 +6,20 @@ export async function PUT(req: NextRequest, props: { params: Promise<{ id: strin
   const session = await auth()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  const clubId = (session.user as any).clubId
+  if (!clubId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
   const { id: rawId } = await props.params
   const id = parseInt(rawId)
+
+  // Verify schedule belongs to user's club
+  const existingSchedule = await prisma.schedule.findFirst({
+    where: { id, trainingGroup: { clubId } }
+  })
+  if (!existingSchedule) {
+    return NextResponse.json({ error: 'Schedule not found in this club' }, { status: 404 })
+  }
+
   const body = await req.json()
 
   const schedule = await prisma.schedule.update({
@@ -28,8 +40,20 @@ export async function DELETE(req: NextRequest, props: { params: Promise<{ id: st
   const session = await auth()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  const clubId = (session.user as any).clubId
+  if (!clubId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
   const { id: rawId } = await props.params
   const id = parseInt(rawId)
+
+  // Verify schedule belongs to user's club
+  const existingSchedule = await prisma.schedule.findFirst({
+    where: { id, trainingGroup: { clubId } }
+  })
+  if (!existingSchedule) {
+    return NextResponse.json({ error: 'Schedule not found in this club' }, { status: 404 })
+  }
+
   await prisma.schedule.delete({ where: { id } })
   return NextResponse.json({ success: true })
 }

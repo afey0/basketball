@@ -9,6 +9,9 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
   const session = await auth()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  const clubId = (session.user as any).clubId
+  if (!clubId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
   const { id: rawId } = await props.params
   const paymentId = parseInt(rawId)
 
@@ -17,11 +20,11 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
     const file = formData.get('file') as File | null
     if (!file) return NextResponse.json({ error: 'No file uploaded' }, { status: 400 })
 
-    const payment = await prisma.payment.findUnique({
-      where: { id: paymentId },
+    const payment = await prisma.payment.findFirst({
+      where: { id: paymentId, student: { clubId } },
       include: { student: { include: { parent: true } } }
     })
-    if (!payment) return NextResponse.json({ error: 'Payment not found' }, { status: 404 })
+    if (!payment) return NextResponse.json({ error: 'Payment not found in this club' }, { status: 404 })
 
     // Verify parent owns this child's payment
     if (session.user?.role === 'PARENT' && payment.student.parentId !== parseInt((session.user as any).id)) {
@@ -53,7 +56,9 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
     })
 
     // Email notification to Admin
-    const settings = await prisma.clubSettings.findFirst()
+    const settings = await prisma.clubSettings.findUnique({
+      where: { clubId }
+    })
     const adminEmail = settings?.contactEmail || process.env.SMTP_USER || ''
     if (adminEmail) {
       sendSlipUploadNotification(
@@ -61,7 +66,8 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
         payment.student.parent?.name || 'Parent',
         `${payment.student.firstName} ${payment.student.lastName}`,
         payment.amount,
-        payment.paymentMonth
+        payment.paymentMonth,
+        clubId
       ).catch(err => console.error('Failed to send slip upload notification email:', err))
     }
 

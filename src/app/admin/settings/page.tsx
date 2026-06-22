@@ -12,11 +12,27 @@ export default async function SettingsPage() {
   if (userRole !== 'ADMIN') {
     redirect('/admin')
   }
-  let settings = await prisma.clubSettings.findFirst()
+  const clubId = parseInt((session.user as any).clubId)
+  let settings = await prisma.clubSettings.findUnique({
+    where: { clubId }
+  })
   if (!settings) {
-    settings = await prisma.clubSettings.create({ data: { clubName: 'Basketball Club', paymentDueDay: 5, currency: 'MVR' } })
+    settings = await prisma.clubSettings.create({
+      data: {
+        clubId,
+        clubName: 'Basketball Club',
+        paymentDueDay: 5,
+        currency: 'MVR'
+      }
+    })
   }
-  const coaches = await prisma.user.findMany({ where: { role: { in: ['COACH','ADMIN'] } }, orderBy: { name: 'asc' } })
+  const coaches = await prisma.user.findMany({
+    where: {
+      role: { in: ['COACH','ADMIN'] },
+      clubId
+    },
+    orderBy: { name: 'asc' }
+  })
   return (
     <>
       <TopHeader title="Settings" subtitle="Club configuration and system settings" />

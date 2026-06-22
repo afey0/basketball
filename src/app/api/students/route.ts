@@ -20,16 +20,17 @@ const studentSchema = z.object({
 export async function GET(req: NextRequest) {
   const session = await auth()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const clubId = parseInt((session.user as any).clubId)
 
   const { searchParams } = new URL(req.url)
   const search = searchParams.get('search') || ''
   const group = searchParams.get('group')
   const ageGroup = searchParams.get('ageGroup')
   const status = searchParams.get('status') || 'ACTIVE'
-  const paymentStatus = searchParams.get('paymentStatus')
 
   const students = await prisma.student.findMany({
     where: {
+      clubId,
       status: status === 'ALL' ? undefined : status,
       ...(group ? { trainingGroupId: parseInt(group) } : {}),
       ...(ageGroup ? { ageGroup } : {}),
@@ -59,6 +60,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const session = await auth()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const clubId = parseInt((session.user as any).clubId)
 
   try {
     const body = await req.json()
@@ -89,6 +91,7 @@ export async function POST(req: NextRequest) {
         status: data.status || 'ACTIVE',
         profilePhoto: data.profilePhoto || null,
         enrollmentDate: new Date(),
+        clubId,
       },
       include: {
         trainingGroup: true,

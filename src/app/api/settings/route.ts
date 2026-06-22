@@ -3,38 +3,80 @@ import { prisma } from '@/lib/prisma'
 import { auth } from '@/auth'
 
 export async function GET() {
-  let settings = await prisma.clubSettings.findFirst()
+  const session = await auth()
+  if (!session || !session.user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const clubId = (session.user as any).clubId
+  if (!clubId) {
+    return NextResponse.json({ error: 'No club associated with user' }, { status: 400 })
+  }
+
+  let settings = await prisma.clubSettings.findUnique({
+    where: { clubId }
+  })
+
   if (!settings) {
+    // Attempt to load the club details to name the settings initially
+    const club = await prisma.club.findUnique({ where: { id: clubId } })
     settings = await prisma.clubSettings.create({
-      data: { clubName: 'Basketball Club', paymentDueDay: 5, currency: 'MVR' }
+      data: {
+        clubId,
+        clubName: club?.name || 'Basketball Club',
+        paymentDueDay: 5,
+        currency: 'MVR',
+      }
     })
   }
+
   return NextResponse.json(settings)
 }
 
 export async function PUT(req: NextRequest) {
   const session = await auth()
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!session || !session.user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const clubId = (session.user as any).clubId
+  if (!clubId) {
+    return NextResponse.json({ error: 'No club associated with user' }, { status: 400 })
+  }
 
   const body = await req.json()
-  let settings = await prisma.clubSettings.findFirst()
+  let settings = await prisma.clubSettings.findUnique({
+    where: { clubId }
+  })
 
-  if (settings) {
-    settings = await prisma.clubSettings.update({
-      where: { id: settings.id },
+  if (!settings) {
+    const club = await prisma.club.findUnique({ where: { id: clubId } })
+    settings = await prisma.clubSettings.create({
       data: {
-        ...(body.clubName && { clubName: body.clubName }),
-        ...(body.contactEmail !== undefined && { contactEmail: body.contactEmail }),
-        ...(body.contactPhone !== undefined && { contactPhone: body.contactPhone }),
-        ...(body.address !== undefined && { address: body.address }),
-        ...(body.paymentDueDay && { paymentDueDay: parseInt(body.paymentDueDay) }),
-        ...(body.smtpHost !== undefined && { smtpHost: body.smtpHost }),
-        ...(body.smtpPort !== undefined && { smtpPort: body.smtpPort ? parseInt(body.smtpPort) : null }),
-        ...(body.smtpUser !== undefined && { smtpUser: body.smtpUser }),
-        ...(body.smtpPassword !== undefined && { smtpPassword: body.smtpPassword }),
-        ...(body.smtpFromName !== undefined && { smtpFromName: body.smtpFromName }),
-      },
+        clubId,
+        clubName: club?.name || 'Basketball Club',
+        paymentDueDay: 5,
+        currency: 'MVR',
+      }
     })
   }
+
+  settings = await prisma.clubSettings.update({
+    where: { clubId },
+    data: {
+      ...(body.clubName && { clubName: body.clubName }),
+      ...(body.contactEmail !== undefined && { contactEmail: body.contactEmail }),
+      ...(body.contactPhone !== undefined && { contactPhone: body.contactPhone }),
+      ...(body.address !== undefined && { address: body.address }),
+      ...(body.paymentDueDay && { paymentDueDay: parseInt(body.paymentDueDay) }),
+      ...(body.smtpHost !== undefined && { smtpHost: body.smtpHost }),
+      ...(body.smtpPort !== undefined && { smtpPort: body.smtpPort ? parseInt(body.smtpPort) : null }),
+      ...(body.smtpUser !== undefined && { smtpUser: body.smtpUser }),
+      ...(body.smtpPassword !== undefined && { smtpPassword: body.smtpPassword }),
+      ...(body.smtpFromName !== undefined && { smtpFromName: body.smtpFromName }),
+      ...(body.currency !== undefined && { currency: body.currency }),
+    },
+  })
+
   return NextResponse.json(settings)
 }

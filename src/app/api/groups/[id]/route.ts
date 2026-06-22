@@ -5,11 +5,12 @@ import { auth } from '@/auth'
 export async function GET(req: NextRequest, props: { params: Promise<{ id: string }> }) {
   const session = await auth()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const clubId = parseInt((session.user as any).clubId)
 
   const { id: rawId } = await props.params
   const id = parseInt(rawId)
-  const group = await prisma.trainingGroup.findUnique({
-    where: { id },
+  const group = await prisma.trainingGroup.findFirst({
+    where: { id, clubId },
     include: {
       coach: true,
       students: { where: { status: 'ACTIVE' }, include: { parent: { select: { name: true } } }, orderBy: { firstName: 'asc' } },
@@ -25,10 +26,16 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
 export async function PUT(req: NextRequest, props: { params: Promise<{ id: string }> }) {
   const session = await auth()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const clubId = parseInt((session.user as any).clubId)
 
   const { id: rawId } = await props.params
   const id = parseInt(rawId)
   const body = await req.json()
+
+  const existing = await prisma.trainingGroup.findFirst({
+    where: { id, clubId }
+  })
+  if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   if (body.monthlyFee !== undefined) {
     await prisma.paymentPlan.upsert({
@@ -61,9 +68,16 @@ export async function PUT(req: NextRequest, props: { params: Promise<{ id: strin
 export async function DELETE(req: NextRequest, props: { params: Promise<{ id: string }> }) {
   const session = await auth()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const clubId = parseInt((session.user as any).clubId)
 
   const { id: rawId } = await props.params
   const id = parseInt(rawId)
+
+  const existing = await prisma.trainingGroup.findFirst({
+    where: { id, clubId }
+  })
+  if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
   await prisma.trainingGroup.delete({ where: { id } })
   return NextResponse.json({ success: true })
 }
