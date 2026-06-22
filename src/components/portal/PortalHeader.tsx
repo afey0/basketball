@@ -32,7 +32,7 @@ const NAV_LINKS = [
   { href: '/portal/schedule', icon: Calendar, label: 'Schedule' },
 ]
 
-export default function PortalHeader({ user }: { user: any }) {
+export default function PortalHeader({ user, clubName = 'MBC CRM', clubLogo }: { user: any, clubName?: string, clubLogo?: string | null }) {
   const pathname = usePathname()
   const initials = user?.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2) || 'P'
   
@@ -119,9 +119,13 @@ export default function PortalHeader({ user }: { user: any }) {
 
       {/* Logo */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginRight: '0.25rem' }}>
-        <Trophy size={20} style={{ color: 'var(--brand)' }} />
+        {clubLogo ? (
+          <img src={clubLogo} alt={clubName} style={{ height: 28, width: 'auto', borderRadius: '4px', objectFit: 'contain' }} />
+        ) : (
+          <Trophy size={20} style={{ color: 'var(--brand)' }} />
+        )}
         <span className="portal-logo-text" style={{ fontWeight: 800, fontSize: '0.95rem', whiteSpace: 'nowrap', color: 'var(--text)' }}>
-          MBC Parent Portal
+          {clubName}
         </span>
       </div>
 

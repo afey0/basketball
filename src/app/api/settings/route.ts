@@ -75,6 +75,7 @@ export async function PUT(req: NextRequest) {
       ...(body.smtpPassword !== undefined && { smtpPassword: body.smtpPassword }),
       ...(body.smtpFromName !== undefined && { smtpFromName: body.smtpFromName }),
       ...(body.currency !== undefined && { currency: body.currency }),
+      ...(body.theme !== undefined && { theme: body.theme }),
     },
   })
 

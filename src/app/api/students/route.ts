@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/auth'
 import { z } from 'zod'
+import { validateCountryIdCard } from '@/lib/utils'
 
 const studentSchema = z.object({
   firstName: z.string().min(1),
@@ -15,6 +16,8 @@ const studentSchema = z.object({
   medicalNotes: z.string().optional().nullable(),
   status: z.string().optional(),
   profilePhoto: z.string().optional().nullable(),
+  country: z.string().optional().nullable(),
+  idCardOrPassport: z.string().optional().nullable(),
 })
 
 export async function GET(req: NextRequest) {
@@ -74,6 +77,17 @@ export async function POST(req: NextRequest) {
     if (dob > today) {
       return NextResponse.json({ error: 'Date of Birth cannot be in the future' }, { status: 400 })
     }
+
+    const validationError = validateCountryIdCard(data.country, data.idCardOrPassport)
+    if (validationError) {
+      return NextResponse.json({ error: validationError }, { status: 400 })
+    }
+
+    let finalIdCard = data.idCardOrPassport?.trim() || null
+    if (finalIdCard && (data.country?.trim().toLowerCase() === 'maldives')) {
+      finalIdCard = finalIdCard.toUpperCase()
+    }
+
     const age = new Date().getFullYear() - dob.getFullYear()
 
     const student = await prisma.student.create({
@@ -92,6 +106,8 @@ export async function POST(req: NextRequest) {
         profilePhoto: data.profilePhoto || null,
         enrollmentDate: new Date(),
         clubId,
+        country: data.country || null,
+        idCardOrPassport: finalIdCard,
       },
       include: {
         trainingGroup: true,
@@ -100,6 +116,12 @@ export async function POST(req: NextRequest) {
     })
     return NextResponse.json(student, { status: 201 })
   } catch (err: any) {
+    if (err.code === 'P2002') {
+      const target = String(err.meta?.target || '')
+      if (target.includes('idCardOrPassport')) {
+        return NextResponse.json({ error: 'Duplicate ID Card or Passport number found.' }, { status: 400 })
+      }
+    }
     return NextResponse.json({ error: err.message || 'Invalid data' }, { status: 400 })
   }
 }

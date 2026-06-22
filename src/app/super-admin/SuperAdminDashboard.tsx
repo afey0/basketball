@@ -33,11 +33,13 @@ export default function SuperAdminDashboard({ initialClubs, stats, user }: Props
   const [editAdminEmail, setEditAdminEmail] = useState('')
   const [editAdminPassword, setEditAdminPassword] = useState('')
   const [editClubName, setEditClubName] = useState('')
+  const [editClubLogo, setEditClubLogo] = useState('')
 
   const openEditModal = (club: any) => {
     const admin = club.users?.[0]
     setEditClubId(club.id)
-    setEditClubName(club.name)
+    setEditClubName(club.name || '')
+    setEditClubLogo(club.logo || '')
     setEditAdminName(admin?.name || '')
     setEditAdminEmail(admin?.email || '')
     setEditAdminPassword('')
@@ -46,8 +48,8 @@ export default function SuperAdminDashboard({ initialClubs, stats, user }: Props
 
   async function handleEditAdmin(e: React.FormEvent) {
     e.preventDefault()
-    if (!editClubId || !editAdminName || !editAdminEmail) {
-      toast.error('Admin name and email are required.')
+    if (!editClubId || !editAdminName || !editAdminEmail || !editClubName) {
+      toast.error('Club Name, Admin Name, and Admin Email are required.')
       return
     }
 
@@ -58,6 +60,8 @@ export default function SuperAdminDashboard({ initialClubs, stats, user }: Props
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           clubId: editClubId,
+          name: editClubName,
+          logo: editClubLogo || '',
           adminName: editAdminName,
           adminEmail: editAdminEmail,
           adminPassword: editAdminPassword || undefined,
@@ -66,21 +70,21 @@ export default function SuperAdminDashboard({ initialClubs, stats, user }: Props
 
       if (!res.ok) {
         const data = await res.json()
-        throw new Error(data.error || 'Failed to update admin credentials')
+        throw new Error(data.error || 'Failed to update club/admin details')
       }
-
-      const updatedUser = await res.json()
 
       // Update local state
       setClubs(prev => prev.map(c => {
         if (c.id === editClubId) {
           return {
             ...c,
+            name: editClubName,
+            logo: editClubLogo || null,
             users: [
               {
                 ...c.users?.[0],
-                name: updatedUser.name,
-                email: updatedUser.email
+                name: editAdminName,
+                email: editAdminEmail
               },
               ...(c.users?.slice(1) || [])
             ]
@@ -89,7 +93,7 @@ export default function SuperAdminDashboard({ initialClubs, stats, user }: Props
         return c
       }))
 
-      toast.success(`Administrator for "${editClubName}" updated successfully!`)
+      toast.success(`Club & Administrator details updated successfully!`)
       setShowEditModal(false)
     } catch (err: any) {
       toast.error(err.message || 'An error occurred')
@@ -349,7 +353,7 @@ export default function SuperAdminDashboard({ initialClubs, stats, user }: Props
                           e.currentTarget.style.borderColor = '#374151';
                         }}
                       >
-                        Edit Admin
+                        Edit Club
                       </button>
                     </td>
                   </tr>
@@ -499,9 +503,9 @@ export default function SuperAdminDashboard({ initialClubs, stats, user }: Props
       {/* Edit Admin Modal */}
       {showEditModal && (
         <div className="modal-overlay" onClick={() => !loading && setShowEditModal(false)} style={{ background: 'rgba(0,0,0,0.7)', zIndex: 100 }}>
-          <div className="modal" onClick={e => e.stopPropagation()} style={{ background: '#1e293b', borderColor: '#334155', maxWidth: '500px' }}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ background: '#1e293b', borderColor: '#334155', maxWidth: '520px' }}>
             <div className="modal-header" style={{ borderBottom: '1px solid #334155', paddingBottom: '1rem' }}>
-              <h2 style={{ fontWeight: 800, margin: 0, fontSize: '1.1rem', color: '#fff' }}>Edit Admin: {editClubName}</h2>
+              <h2 style={{ fontWeight: 800, margin: 0, fontSize: '1.1rem', color: '#fff' }}>Edit Club & Admin</h2>
               <button 
                 className="btn-ghost" 
                 style={{ padding: '0.375rem', color: '#94a3b8' }} 
@@ -515,46 +519,85 @@ export default function SuperAdminDashboard({ initialClubs, stats, user }: Props
             <form onSubmit={handleEditAdmin}>
               <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1.5rem 0' }}>
                 
-                <div className="form-group">
-                  <label className="form-label" style={{ color: '#cbd5e1', fontSize: '0.75rem' }}>Admin Full Name *</label>
-                  <input 
-                    className="input" 
-                    required 
-                    value={editAdminName} 
-                    onChange={e => setEditAdminName(e.target.value)} 
-                    disabled={loading} 
-                    placeholder="e.g. Ahmed Ali"
-                    style={{ background: '#0f172a', borderColor: '#334155', color: '#fff' }}
-                  />
+                {/* Section 1: Club Branding */}
+                <div>
+                  <h3 style={{ fontSize: '0.75rem', fontWeight: 800, color: '#818cf8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>
+                    1. Club Details
+                  </h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
+                    <div className="form-group">
+                      <label className="form-label" style={{ color: '#cbd5e1', fontSize: '0.75rem' }}>Club Name *</label>
+                      <input 
+                        className="input" 
+                        required 
+                        value={editClubName} 
+                        onChange={e => setEditClubName(e.target.value)} 
+                        disabled={loading} 
+                        placeholder="e.g. Hawks Basketball"
+                        style={{ background: '#0f172a', borderColor: '#334155', color: '#fff' }}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label" style={{ color: '#cbd5e1', fontSize: '0.75rem' }}>Logo URL</label>
+                      <input 
+                        className="input" 
+                        value={editClubLogo} 
+                        onChange={e => setEditClubLogo(e.target.value)} 
+                        disabled={loading} 
+                        placeholder="e.g. https://..."
+                        style={{ background: '#0f172a', borderColor: '#334155', color: '#fff' }}
+                      />
+                    </div>
+                  </div>
                 </div>
 
-                <div className="form-group">
-                  <label className="form-label" style={{ color: '#cbd5e1', fontSize: '0.75rem' }}>Admin Email *</label>
-                  <input 
-                    type="email"
-                    className="input" 
-                    required 
-                    value={editAdminEmail} 
-                    onChange={e => setEditAdminEmail(e.target.value)} 
-                    disabled={loading} 
-                    placeholder="admin@club.mv"
-                    style={{ background: '#0f172a', borderColor: '#334155', color: '#fff' }}
-                  />
-                </div>
+                {/* Section 2: Club Admin details */}
+                <div style={{ borderTop: '1px solid #334155', paddingTop: '1.25rem', marginTop: '0.5rem' }}>
+                  <h3 style={{ fontSize: '0.75rem', fontWeight: 800, color: '#818cf8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>
+                    2. Club Administrator Account
+                  </h3>
+                  
+                  <div className="form-group">
+                    <label className="form-label" style={{ color: '#cbd5e1', fontSize: '0.75rem' }}>Admin Full Name *</label>
+                    <input 
+                      className="input" 
+                      required 
+                      value={editAdminName} 
+                      onChange={e => setEditAdminName(e.target.value)} 
+                      disabled={loading} 
+                      placeholder="e.g. Ahmed Ali"
+                      style={{ background: '#0f172a', borderColor: '#334155', color: '#fff' }}
+                    />
+                  </div>
 
-                <div className="form-group">
-                  <label className="form-label" style={{ color: '#cbd5e1', fontSize: '0.75rem' }}>
-                    New Admin Password <span style={{ color: '#94a3b8', fontSize: '0.7rem', fontWeight: 'normal' }}>(leave blank to keep current)</span>
-                  </label>
-                  <input 
-                    type="password"
-                    className="input" 
-                    value={editAdminPassword} 
-                    onChange={e => setEditAdminPassword(e.target.value)} 
-                    disabled={loading} 
-                    placeholder="Min 6 chars"
-                    style={{ background: '#0f172a', borderColor: '#334155', color: '#fff' }}
-                  />
+                  <div className="form-group" style={{ marginTop: '0.75rem' }}>
+                    <label className="form-label" style={{ color: '#cbd5e1', fontSize: '0.75rem' }}>Admin Email *</label>
+                    <input 
+                      type="email"
+                      className="input" 
+                      required 
+                      value={editAdminEmail} 
+                      onChange={e => setEditAdminEmail(e.target.value)} 
+                      disabled={loading} 
+                      placeholder="admin@club.mv"
+                      style={{ background: '#0f172a', borderColor: '#334155', color: '#fff' }}
+                    />
+                  </div>
+
+                  <div className="form-group" style={{ marginTop: '0.75rem' }}>
+                    <label className="form-label" style={{ color: '#cbd5e1', fontSize: '0.75rem' }}>
+                      New Admin Password <span style={{ color: '#94a3b8', fontSize: '0.7rem', fontWeight: 'normal' }}>(leave blank to keep current)</span>
+                    </label>
+                    <input 
+                      type="password"
+                      className="input" 
+                      value={editAdminPassword} 
+                      onChange={e => setEditAdminPassword(e.target.value)} 
+                      disabled={loading} 
+                      placeholder="Min 6 chars"
+                      style={{ background: '#0f172a', borderColor: '#334155', color: '#fff' }}
+                    />
+                  </div>
                 </div>
 
               </div>

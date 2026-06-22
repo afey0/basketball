@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/auth'
 import bcrypt from 'bcryptjs'
+import { validateCountryIdCard } from '@/lib/utils'
 
 export async function GET(
   req: NextRequest,
@@ -34,6 +35,8 @@ export async function GET(
           email: true,
           phone: true,
           role: true,
+          country: true,
+          idCardOrPassport: true,
         }
       }
     }
@@ -69,6 +72,9 @@ export async function PUT(
       where: {
         id: staffId,
         user: { clubId: clubId }
+      },
+      include: {
+        user: true
       }
     })
 
@@ -89,7 +95,9 @@ export async function PUT(
       idCardUrl,
       policeReportUrl,
       contractUrl,
-      salary
+      salary,
+      country,
+      idCardOrPassport
     } = body
 
     if (!name || !email || !staffType) {
@@ -100,10 +108,28 @@ export async function PUT(
       return NextResponse.json({ error: 'Phone number must contain only digits' }, { status: 400 })
     }
 
+    // Validate country & ID card
+    if (country !== undefined || idCardOrPassport !== undefined) {
+      const valCountry = country !== undefined ? country : staff.user.country
+      const valIdCard = idCardOrPassport !== undefined ? idCardOrPassport : staff.user.idCardOrPassport
+      const validationError = validateCountryIdCard(valCountry, valIdCard)
+      if (validationError) {
+        return NextResponse.json({ error: validationError }, { status: 400 })
+      }
+    }
+
+    let finalIdCard = idCardOrPassport !== undefined ? (idCardOrPassport?.trim() || null) : undefined
+    const finalCountry = country !== undefined ? (country?.trim() || 'Maldives') : staff.user.country || 'Maldives'
+    if (finalIdCard && finalCountry.toLowerCase() === 'maldives') {
+      finalIdCard = finalIdCard.toUpperCase()
+    }
+
     let updateUserData: any = {
       name,
       email,
       phone: phone || null,
+      ...(country !== undefined && { country: country || null }),
+      ...(finalIdCard !== undefined && { idCardOrPassport: finalIdCard }),
     }
 
     if (password && password.trim() !== '') {
@@ -137,6 +163,8 @@ export async function PUT(
               email: true,
               phone: true,
               role: true,
+              country: true,
+              idCardOrPassport: true,
             }
           }
         }
@@ -148,6 +176,10 @@ export async function PUT(
     return NextResponse.json(updatedStaff)
   } catch (err: any) {
     if (err.code === 'P2002') {
+      const target = String(err.meta?.target || '')
+      if (target.includes('idCardOrPassport')) {
+        return NextResponse.json({ error: 'Duplicate ID Card or Passport number found.' }, { status: 400 })
+      }
       return NextResponse.json({ error: 'Email already exists' }, { status: 400 })
     }
     return NextResponse.json({ error: err.message || 'Server error' }, { status: 500 })

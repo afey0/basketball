@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/auth'
 import bcrypt from 'bcryptjs'
+import { validateCountryIdCard } from '@/lib/utils'
 
 export async function GET() {
   const session = await auth()
@@ -35,6 +36,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Phone number must contain only digits' }, { status: 400 })
   }
 
+  const validationError = validateCountryIdCard(body.country, body.idCardOrPassport)
+  if (validationError) {
+    return NextResponse.json({ error: validationError }, { status: 400 })
+  }
+
+  let finalIdCard = body.idCardOrPassport?.trim() || null
+  if (finalIdCard && (body.country?.trim().toLowerCase() === 'maldives')) {
+    finalIdCard = finalIdCard.toUpperCase()
+  }
+
   const hashedPassword = await bcrypt.hash(body.password || 'parent123', 12)
 
   try {
@@ -46,12 +57,20 @@ export async function POST(req: NextRequest) {
         phone: body.phone,
         role: 'PARENT',
         clubId,
+        country: body.country || null,
+        idCardOrPassport: finalIdCard,
       },
     })
     const { password: _, ...safeParent } = parent
     return NextResponse.json(safeParent, { status: 201 })
   } catch (err: any) {
-    if (err.code === 'P2002') return NextResponse.json({ error: 'Email already exists' }, { status: 400 })
+    if (err.code === 'P2002') {
+      const target = String(err.meta?.target || '')
+      if (target.includes('idCardOrPassport')) {
+        return NextResponse.json({ error: 'Duplicate ID Card or Passport number found.' }, { status: 400 })
+      }
+      return NextResponse.json({ error: 'Email already exists' }, { status: 400 })
+    }
     return NextResponse.json({ error: 'Failed to create parent' }, { status: 500 })
   }
 }

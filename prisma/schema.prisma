@@ -18,6 +18,8 @@ model User {
   phone     String?
   role      String   @default("PARENT") // SUPERADMIN, ADMIN, COACH, PARENT
   clubId    Int?
+  country          String?
+  idCardOrPassport String?   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -45,6 +47,8 @@ model Student {
   enrollmentDate  DateTime @default(now())
   status          String   @default("ACTIVE") // ACTIVE, INACTIVE, SUSPENDED
   clubId          Int?
+  country          String?
+  idCardOrPassport String?   @unique
   createdAt       DateTime @default(now())
 
   // Foreign keys
@@ -167,6 +171,7 @@ model ClubSettings {
   smtpPassword    String?
   smtpFromName    String?
   currency        String @default("MVR")
+  theme           String @default("default")
   updatedAt       DateTime @updatedAt
 
   // Relation

@@ -80,6 +80,18 @@ export default function StudentDetailClient({ student: initial, groups, parents 
               <div style={{ fontWeight: 600 }}>{formatDate(student.enrollmentDate)}</div>
             </div>
             <div>
+              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Country</div>
+              <div style={{ fontWeight: 600 }}>{student.country || 'Maldives'}</div>
+            </div>
+            {student.idCardOrPassport && (
+              <div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  {student.country?.toLowerCase() === 'maldives' ? 'ID Card' : 'Passport'}
+                </div>
+                <div style={{ fontWeight: 600 }}>{student.idCardOrPassport}</div>
+              </div>
+            )}
+            <div>
               <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Attendance Rate</div>
               <div style={{ fontWeight: 700, color: attendanceRate >= 75 ? '#166534' : '#b91c1c' }}>{attendanceRate}%</div>
             </div>

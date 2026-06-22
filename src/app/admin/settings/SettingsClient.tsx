@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { Save, Building2, CreditCard, Mail, Send } from 'lucide-react'
+import { Save, Building2, CreditCard, Mail, Send, Palette } from 'lucide-react'
 
 interface Props { settings: any; coaches: any[] }
 
@@ -91,6 +91,28 @@ export default function SettingsClient({ settings: initial, coaches }: Props) {
             <label className="form-label">Payment Due Day (of each month)</label>
             <input className="input" type="number" min={1} max={28} value={form.paymentDueDay || 5} onChange={e => set('paymentDueDay', e.target.value)} style={{ maxWidth: 100 }} />
             <div style={{ fontSize: '0.75rem', color: '#8B8BA7', marginTop: '0.25rem' }}>e.g., 5 = payments due on the 5th of each month</div>
+          </div>
+        </div>
+
+        {/* Interface Customization */}
+        <div className="card" style={{ marginBottom: '1.25rem' }}>
+          <h3 style={{ fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Palette size={18} style={{ color: 'var(--brand)' }} /> Interface Customization</h3>
+          <div className="form-group">
+            <label className="form-label">Active Portal Theme</label>
+            <select className="input" value={form.theme || 'default'} onChange={e => set('theme', e.target.value)}>
+              <option value="default">Default Light</option>
+              <option value="dark">Slate Dark</option>
+              <option value="emerald">Emerald Green</option>
+              <option value="orange">Amber Orange</option>
+              <option value="rose">Rose Red</option>
+              <option value="royal">Royal Blue</option>
+              <option value="yellow">Yellow Gold</option>
+              <option value="purple">Amethyst Purple</option>
+              <option value="cyberpunk">Cyberpunk Neon (Hot Pink / Cyan)</option>
+            </select>
+            <div style={{ fontSize: '0.75rem', color: '#8B8BA7', marginTop: '0.25rem' }}>
+              Choose a theme for your club's portal. This is applied instantly to the Admin and Parent portals.
+            </div>
           </div>
         </div>
 

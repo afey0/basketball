@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { Plus, Search, Download, Eye, Edit, Trash2, Filter } from 'lucide-react'
-import { formatDate, formatDateForInput, calculateAge, AGE_GROUPS } from '@/lib/utils'
+import { formatDate, formatDateForInput, calculateAge, AGE_GROUPS, COUNTRIES } from '@/lib/utils'
 import Link from 'next/link'
 
 interface Props { students: any[]; groups: any[]; parents: any[] }
@@ -195,13 +195,15 @@ export function StudentModal({ groups, parents, student, onClose, onSave }: any)
     if (student) {
       return {
         ...student,
-        profilePhoto: student.profilePhoto || ''
+        profilePhoto: student.profilePhoto || '',
+        country: student.country || 'Maldives',
+        idCardOrPassport: student.idCardOrPassport || ''
       }
     }
     return {
       firstName: '', lastName: '', dateOfBirth: '', gender: 'MALE',
       ageGroup: 'U-8', trainingGroupId: '', parentId: '', jerseyNumber: '', medicalNotes: '',
-      profilePhoto: ''
+      profilePhoto: '', country: 'Maldives', idCardOrPassport: ''
     }
   })
   const [loading, setLoading] = useState(false)
@@ -233,6 +235,16 @@ export function StudentModal({ groups, parents, student, onClose, onSave }: any)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+
+    let finalIdCard = form.idCardOrPassport.trim()
+    if (form.country.toLowerCase() === 'maldives') {
+      finalIdCard = finalIdCard.toUpperCase()
+      if (!/^[Aa]\d{6}$/.test(finalIdCard)) {
+        toast.error('ID Card must be in the format Axxxxxx (A followed by 6 digits).')
+        return
+      }
+    }
+
     setLoading(true)
     try {
       const url = isEdit ? `/api/students/${student.id}` : '/api/students'
@@ -241,12 +253,16 @@ export function StudentModal({ groups, parents, student, onClose, onSave }: any)
         method, headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...form,
+          idCardOrPassport: finalIdCard || null,
           trainingGroupId: form.trainingGroupId ? parseInt(form.trainingGroupId) : null,
           parentId: form.parentId ? parseInt(form.parentId) : null,
           jerseyNumber: form.jerseyNumber ? parseInt(form.jerseyNumber) : null,
         }),
       })
-      if (!res.ok) throw new Error(await res.text())
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error || 'Failed to save student')
+      }
       const data = await res.json()
       onSave(data)
       toast.success(isEdit ? 'Student updated' : 'Student added')
@@ -326,6 +342,31 @@ export function StudentModal({ groups, parents, student, onClose, onSave }: any)
                 <input className="input" type="number" value={form.jerseyNumber || ''} onChange={e => set('jerseyNumber', e.target.value)} placeholder="#" />
               </div>
             </div>
+
+            <div className="grid-2">
+              <div className="form-group">
+                <label className="form-label">Country *</label>
+                <select className="select" value={form.country} onChange={e => set('country', e.target.value)}>
+                  {COUNTRIES.map((c: any) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">
+                  {form.country?.toLowerCase() === 'maldives' ? 'ID Card *' : 'Passport'}
+                </label>
+                <input 
+                  className="input" 
+                  required={form.country?.toLowerCase() === 'maldives'} 
+                  value={form.idCardOrPassport || ''} 
+                  onChange={e => {
+                    const val = e.target.value
+                    set('idCardOrPassport', form.country?.toLowerCase() === 'maldives' ? val.toUpperCase() : val)
+                  }} 
+                  placeholder={form.country?.toLowerCase() === 'maldives' ? 'e.g. A123456' : 'Passport number'}
+                />
+              </div>
+            </div>
+
             <div className="form-group">
               <label className="form-label">Training Group</label>
               <select className="select" value={form.trainingGroupId || ''} onChange={e => set('trainingGroupId', e.target.value)}>

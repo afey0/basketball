@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { Plus, Search, Edit, Trash2, Shield, User, Award } from 'lucide-react'
-import { formatDate } from '@/lib/utils'
+import { formatDate, COUNTRIES } from '@/lib/utils'
 
 interface Props {
   initialUsers: any[]
@@ -196,7 +196,7 @@ export default function UsersClient({ initialUsers, currentUserId }: Props) {
 }
 
 function AddUserModal({ onClose, onSave }: any) {
-  const [form, setForm] = useState({ name: '', email: '', phone: '', password: '', role: 'ADMIN' })
+  const [form, setForm] = useState({ name: '', email: '', phone: '', password: '', role: 'ADMIN', country: 'Maldives', idCardOrPassport: '' })
   const [loading, setLoading] = useState(false)
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }))
 
@@ -207,12 +207,21 @@ function AddUserModal({ onClose, onSave }: any) {
       return
     }
 
+    let finalIdCard = form.idCardOrPassport.trim()
+    if (form.country.toLowerCase() === 'maldives') {
+      finalIdCard = finalIdCard.toUpperCase()
+      if (!/^[Aa]\d{6}$/.test(finalIdCard)) {
+        toast.error('ID Card must be in the format Axxxxxx (A followed by 6 digits).')
+        return
+      }
+    }
+
     setLoading(true)
     try {
       const res = await fetch('/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, idCardOrPassport: finalIdCard }),
       })
       if (!res.ok) {
         const err = await res.json()
@@ -249,6 +258,31 @@ function AddUserModal({ onClose, onSave }: any) {
               <label className="form-label">Phone Number</label>
               <input className="input" value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="e.g. 9607771234" pattern="[0-9]*" title="Phone number must contain only digits" />
             </div>
+
+            <div className="grid-2">
+              <div className="form-group">
+                <label className="form-label">Country *</label>
+                <select className="select" value={form.country} onChange={e => set('country', e.target.value)}>
+                  {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">
+                  {form.country.toLowerCase() === 'maldives' ? 'ID Card *' : 'Passport'}
+                </label>
+                <input 
+                  className="input" 
+                  required={form.country.toLowerCase() === 'maldives'} 
+                  value={form.idCardOrPassport} 
+                  onChange={e => {
+                    const val = e.target.value
+                    set('idCardOrPassport', form.country.toLowerCase() === 'maldives' ? val.toUpperCase() : val)
+                  }} 
+                  placeholder={form.country.toLowerCase() === 'maldives' ? 'e.g. A123456' : 'Passport number'}
+                />
+              </div>
+            </div>
+
             <div className="form-group">
               <label className="form-label">User Role *</label>
               <select className="select" value={form.role} onChange={e => set('role', e.target.value)}>
@@ -274,12 +308,22 @@ function AddUserModal({ onClose, onSave }: any) {
 }
 
 function EditUserModal({ user, currentUserId, onClose, onSave }: any) {
-  const [form, setForm] = useState({ name: user.name, email: user.email, phone: user.phone || '', password: '', role: user.role })
+  const [form, setForm] = useState({ name: user.name, email: user.email, phone: user.phone || '', password: '', role: user.role, country: user.country || 'Maldives', idCardOrPassport: user.idCardOrPassport || '' })
   const [loading, setLoading] = useState(false)
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }))
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+
+    let finalIdCard = form.idCardOrPassport.trim()
+    if (form.country.toLowerCase() === 'maldives') {
+      finalIdCard = finalIdCard.toUpperCase()
+      if (!/^[Aa]\d{6}$/.test(finalIdCard)) {
+        toast.error('ID Card must be in the format Axxxxxx (A followed by 6 digits).')
+        return
+      }
+    }
+
     setLoading(true)
     try {
       const res = await fetch(`/api/users/${user.id}`, {
@@ -290,6 +334,8 @@ function EditUserModal({ user, currentUserId, onClose, onSave }: any) {
           email: form.email,
           phone: form.phone,
           role: form.role,
+          country: form.country,
+          idCardOrPassport: finalIdCard || null,
           ...(form.password.trim() ? { password: form.password } : {})
         }),
       })
@@ -328,6 +374,31 @@ function EditUserModal({ user, currentUserId, onClose, onSave }: any) {
               <label className="form-label">Phone Number</label>
               <input className="input" value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="e.g. 9607771234" pattern="[0-9]*" title="Phone number must contain only digits" />
             </div>
+
+            <div className="grid-2">
+              <div className="form-group">
+                <label className="form-label">Country *</label>
+                <select className="select" value={form.country} onChange={e => set('country', e.target.value)}>
+                  {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">
+                  {form.country.toLowerCase() === 'maldives' ? 'ID Card *' : 'Passport'}
+                </label>
+                <input 
+                  className="input" 
+                  required={form.country.toLowerCase() === 'maldives'} 
+                  value={form.idCardOrPassport} 
+                  onChange={e => {
+                    const val = e.target.value
+                    set('idCardOrPassport', form.country.toLowerCase() === 'maldives' ? val.toUpperCase() : val)
+                  }} 
+                  placeholder={form.country.toLowerCase() === 'maldives' ? 'e.g. A123456' : 'Passport number'}
+                />
+              </div>
+            </div>
+
             <div className="form-group">
               <label className="form-label">User Role *</label>
               <select 

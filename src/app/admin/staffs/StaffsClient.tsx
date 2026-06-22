@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { Plus, Search, Edit, Trash2, FileText, CheckCircle, Upload, DollarSign, Briefcase, Paperclip, CreditCard, Loader2, Calendar } from 'lucide-react'
-import { formatDate } from '@/lib/utils'
+import { formatDate, COUNTRIES } from '@/lib/utils'
 
 interface Props {
   staffs: any[]
@@ -234,6 +234,8 @@ function StaffFormModal({ staff, onClose, onSave }: any) {
     passportUrl: staff?.passportUrl || '',
     idCardUrl: staff?.idCardUrl || '',
     policeReportUrl: staff?.policeReportUrl || '',
+    country: staff?.user?.country || 'Maldives',
+    idCardOrPassport: staff?.user?.idCardOrPassport || '',
   })
 
   const [uploading, setUploading] = useState<Record<string, boolean>>({})
@@ -273,6 +275,15 @@ function StaffFormModal({ staff, onClose, onSave }: any) {
       return
     }
 
+    let finalIdCard = form.idCardOrPassport.trim()
+    if (form.country.toLowerCase() === 'maldives') {
+      finalIdCard = finalIdCard.toUpperCase()
+      if (!/^[Aa]\d{6}$/.test(finalIdCard)) {
+        toast.error('ID Card must be in the format Axxxxxx (A followed by 6 digits).')
+        return
+      }
+    }
+
     setLoading(true)
     try {
       const url = isEdit ? `/api/admin/staffs/${staff.id}` : '/api/admin/staffs'
@@ -281,7 +292,7 @@ function StaffFormModal({ staff, onClose, onSave }: any) {
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, idCardOrPassport: finalIdCard || null }),
       })
 
       if (!res.ok) {
@@ -336,6 +347,29 @@ function StaffFormModal({ staff, onClose, onSave }: any) {
                 {isEdit ? 'Change Password (leave blank to keep)' : 'Password *'}
               </label>
               <input className="input" type="password" required={!isEdit} value={form.password} onChange={e => set('password', e.target.value)} placeholder={isEdit ? 'New password...' : 'Password...'} />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Country *</label>
+              <select className="select" value={form.country} onChange={e => set('country', e.target.value)}>
+                {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">
+                {form.country.toLowerCase() === 'maldives' ? 'ID Card *' : 'Passport'}
+              </label>
+              <input 
+                className="input" 
+                required={form.country.toLowerCase() === 'maldives'} 
+                value={form.idCardOrPassport} 
+                onChange={e => {
+                  const val = e.target.value
+                  set('idCardOrPassport', form.country.toLowerCase() === 'maldives' ? val.toUpperCase() : val)
+                }} 
+                placeholder={form.country.toLowerCase() === 'maldives' ? 'e.g. A123456' : 'Passport number'}
+              />
             </div>
 
             {/* Profile & Position Details */}

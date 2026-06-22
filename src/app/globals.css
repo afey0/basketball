@@ -741,4 +741,110 @@ body {
   margin-right: 0.25rem !important;
 }
 
+/* Multi-Theme support */
+.theme-dark {
+  --background: #0f172a;
+  --surface: #1e293b;
+  --surface-2: #334155;
+  --border: #334155;
+  --border-focus: #6366f1;
+  --brand: #6366f1;
+  --brand-light: #312e81;
+  --brand-dark: #4f46e5;
+  --text: #f8fafc;
+  --text-muted: #94a3b8;
+}
+
+.theme-emerald {
+  --background: #060f0e;
+  --surface: #0a1c1a;
+  --surface-2: #112e2b;
+  --border: #163b37;
+  --border-focus: #10b981;
+  --brand: #10b981;
+  --brand-light: #064e3b;
+  --brand-dark: #059669;
+  --text: #f0fdf4;
+  --text-muted: #86efac;
+}
+
+.theme-orange {
+  --background: #0f0d0c;
+  --surface: #1a1615;
+  --surface-2: #27211f;
+  --border: #362d2a;
+  --border-focus: #f97316;
+  --brand: #f97316;
+  --brand-light: #431407;
+  --brand-dark: #ea580c;
+  --text: #fff7ed;
+  --text-muted: #fdba74;
+}
+
+.theme-rose {
+  --background: #110609;
+  --surface: #1f0e13;
+  --surface-2: #30161d;
+  --border: #421e28;
+  --border-focus: #f43f5e;
+  --brand: #f43f5e;
+  --brand-light: #4c0519;
+  --brand-dark: #e11d48;
+  --text: #fff1f2;
+  --text-muted: #fda4af;
+}
+
+.theme-royal {
+  --background: #090e1a;
+  --surface: #10172a;
+  --surface-2: #1e293b;
+  --border: #2e3c54;
+  --border-focus: #3b82f6;
+  --brand: #3b82f6;
+  --brand-light: #172554;
+  --brand-dark: #2563eb;
+  --text: #eff6ff;
+  --text-muted: #93c5fd;
+}
+
+.theme-yellow {
+  --background: #0f0e0a;
+  --surface: #1c1a12;
+  --surface-2: #29261a;
+  --border: #3b3726;
+  --border-focus: #eab308;
+  --brand: #eab308;
+  --brand-light: #422006;
+  --brand-dark: #ca8a04;
+  --text: #fefce8;
+  --text-muted: #fde047;
+}
+
+.theme-purple {
+  --background: #0e0914;
+  --surface: #191124;
+  --surface-2: #271b38;
+  --border: #3a2854;
+  --border-focus: #a855f7;
+  --brand: #a855f7;
+  --brand-light: #3b0764;
+  --brand-dark: #9333ea;
+  --text: #faf5ff;
+  --text-muted: #d8b4fe;
+}
+
+.theme-cyberpunk {
+  --background: #0a0512;
+  --surface: #140b24;
+  --surface-2: #21123a;
+  --border: #ff007f;
+  --border-focus: #00ffff;
+  --brand: #ff007f;
+  --brand-light: #25083a;
+  --brand-dark: #00ffff;
+  --text: #ffffff;
+  --text-muted: #ab8bf0;
+}
+
+
 

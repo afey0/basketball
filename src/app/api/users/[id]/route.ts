@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { auth } from '@/auth'
 import bcrypt from 'bcryptjs'
 import { sendPasswordResetEmail } from '@/lib/email'
+import { validateCountryIdCard } from '@/lib/utils'
 
 export async function GET(req: NextRequest, props: { params: Promise<{ id: string }> }) {
   const session = await auth()
@@ -73,12 +74,30 @@ export async function PUT(req: NextRequest, props: { params: Promise<{ id: strin
     return NextResponse.json({ error: 'Phone number must contain only digits' }, { status: 400 })
   }
 
+  // Validate country & ID card
+  if (body.country !== undefined || body.idCardOrPassport !== undefined) {
+    const valCountry = body.country !== undefined ? body.country : existingUser.country
+    const valIdCard = body.idCardOrPassport !== undefined ? body.idCardOrPassport : existingUser.idCardOrPassport
+    const validationError = validateCountryIdCard(valCountry, valIdCard)
+    if (validationError) {
+      return NextResponse.json({ error: validationError }, { status: 400 })
+    }
+  }
+
+  let finalIdCard = body.idCardOrPassport !== undefined ? (body.idCardOrPassport?.trim() || null) : undefined
+  const finalCountry = body.country !== undefined ? (body.country?.trim() || 'Maldives') : existingUser.country || 'Maldives'
+  if (finalIdCard && finalCountry.toLowerCase() === 'maldives') {
+    finalIdCard = finalIdCard.toUpperCase()
+  }
+
   try {
     const data: any = {
       ...(body.name && { name: body.name }),
       ...(body.email && { email: body.email }),
       ...(body.phone !== undefined && { phone: body.phone || null }),
       ...(body.role && loggedInUserRole === 'ADMIN' && { role: body.role }),
+      ...(body.country !== undefined && { country: body.country || null }),
+      ...(finalIdCard !== undefined && { idCardOrPassport: finalIdCard }),
     }
 
     if (body.password) {
@@ -112,6 +131,10 @@ export async function PUT(req: NextRequest, props: { params: Promise<{ id: strin
     return NextResponse.json(safeUser)
   } catch (err: any) {
     if (err.code === 'P2002') {
+      const target = String(err.meta?.target || '')
+      if (target.includes('idCardOrPassport')) {
+        return NextResponse.json({ error: 'Duplicate ID Card or Passport number found.' }, { status: 400 })
+      }
       return NextResponse.json({ error: 'Email already exists' }, { status: 400 })
     }
     return NextResponse.json({ error: err.message || 'Server error' }, { status: 500 })

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/auth'
 import bcrypt from 'bcryptjs'
+import { validateCountryIdCard } from '@/lib/utils'
 
 export async function GET() {
   const session = await auth()
@@ -27,6 +28,8 @@ export async function GET() {
           email: true,
           phone: true,
           role: true,
+          country: true,
+          idCardOrPassport: true,
           createdAt: true,
         }
       }
@@ -67,7 +70,9 @@ export async function POST(req: NextRequest) {
       idCardUrl,
       policeReportUrl,
       contractUrl,
-      salary
+      salary,
+      country,
+      idCardOrPassport
     } = body
 
     if (!name || !email || !password || !staffType) {
@@ -76,6 +81,16 @@ export async function POST(req: NextRequest) {
 
     if (phone && !/^\d+$/.test(phone.trim())) {
       return NextResponse.json({ error: 'Phone number must contain only digits' }, { status: 400 })
+    }
+
+    const validationError = validateCountryIdCard(country, idCardOrPassport)
+    if (validationError) {
+      return NextResponse.json({ error: validationError }, { status: 400 })
+    }
+
+    let finalIdCard = idCardOrPassport?.trim() || null
+    if (finalIdCard && (country?.trim().toLowerCase() === 'maldives')) {
+      finalIdCard = finalIdCard.toUpperCase()
     }
 
     const hashedPassword = await bcrypt.hash(password, 12)
@@ -90,6 +105,8 @@ export async function POST(req: NextRequest) {
           phone: phone || null,
           role: 'COACH', // All staffs are given the COACH role to grant them access to dashboard/attendance
           clubId, // Set the clubId!
+          country: country || null,
+          idCardOrPassport: finalIdCard,
         }
       })
 
@@ -113,6 +130,8 @@ export async function POST(req: NextRequest) {
               email: true,
               phone: true,
               role: true,
+              country: true,
+              idCardOrPassport: true,
               createdAt: true,
             }
           }
@@ -125,6 +144,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(result, { status: 201 })
   } catch (err: any) {
     if (err.code === 'P2002') {
+      const target = String(err.meta?.target || '')
+      if (target.includes('idCardOrPassport')) {
+        return NextResponse.json({ error: 'Duplicate ID Card or Passport number found.' }, { status: 400 })
+      }
       return NextResponse.json({ error: 'Email already exists' }, { status: 400 })
     }
     return NextResponse.json({ error: err.message || 'Server error' }, { status: 500 })

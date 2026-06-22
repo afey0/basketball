@@ -46,7 +46,7 @@ const navSections = [
 export default function AdminSidebar() {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
-  const { userRole } = useAdminUser()
+  const { userRole, clubName, clubLogo } = useAdminUser()
 
   useEffect(() => {
     const handleToggle = () => setIsOpen(prev => !prev)
@@ -88,16 +88,22 @@ export default function AdminSidebar() {
         {/* Logo */}
         <div className="sidebar-logo" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <div style={{
-              width: 38, height: 38, borderRadius: 10,
-              background: 'linear-gradient(135deg, #4f46e5, #6366f1)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexShrink: 0
-            }}>
-              <Trophy size={20} style={{ color: '#fff' }} />
-            </div>
+            {clubLogo ? (
+              <img src={clubLogo} alt={clubName} style={{ height: 38, width: 'auto', borderRadius: '6px', objectFit: 'contain' }} />
+            ) : (
+              <div style={{
+                width: 38, height: 38, borderRadius: 10,
+                background: 'linear-gradient(135deg, var(--brand), #6366f1)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0
+              }}>
+                <Trophy size={20} style={{ color: '#fff' }} />
+              </div>
+            )}
             <div>
-              <div style={{ fontWeight: 800, fontSize: '0.9rem', lineHeight: 1.2, color: 'var(--text)' }}>MBC CRM</div>
+              <div style={{ fontWeight: 800, fontSize: '0.9rem', lineHeight: 1.2, color: 'var(--text)' }}>
+                {clubName || 'MBC CRM'}
+              </div>
               <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
                 {userRole === 'ADMIN' ? 'Admin Portal' : 'Staff Portal'}
               </div>

@@ -110,7 +110,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// PUT /api/super-admin/clubs - Update a club's admin details
+// PUT /api/super-admin/clubs - Update a club's admin details, name, and logo
 export async function PUT(req: NextRequest) {
   const session = await auth()
   if (!session || (session.user as any)?.role !== 'SUPERADMIN') {
@@ -119,65 +119,98 @@ export async function PUT(req: NextRequest) {
 
   try {
     const body = await req.json()
-    const { clubId, adminName, adminEmail, adminPassword } = body
+    const { clubId, adminName, adminEmail, adminPassword, name, logo } = body
 
     if (!clubId) {
       return NextResponse.json({ error: 'Club ID is required.' }, { status: 400 })
     }
 
+    const parsedClubId = parseInt(clubId)
+
+    // Update Club name/logo if provided
+    if (name || logo !== undefined) {
+      const clubUpdateData: any = {}
+      if (name) clubUpdateData.name = name.trim()
+      if (logo !== undefined) clubUpdateData.logo = logo ? logo.trim() : null
+
+      await prisma.club.update({
+        where: { id: parsedClubId },
+        data: clubUpdateData,
+      })
+
+      // Sync to ClubSettings
+      const settingsUpdateData: any = {}
+      if (name) settingsUpdateData.clubName = name.trim()
+      if (logo !== undefined) settingsUpdateData.clubLogo = logo ? logo.trim() : null
+
+      await prisma.clubSettings.upsert({
+        where: { clubId: parsedClubId },
+        update: settingsUpdateData,
+        create: {
+          clubId: parsedClubId,
+          clubName: name ? name.trim() : 'Basketball Training Club',
+          clubLogo: logo ? logo.trim() : null,
+          paymentDueDay: 5,
+          currency: 'MVR',
+        },
+      })
+    }
+
     // Find the admin user for this club
     const adminUser = await prisma.user.findFirst({
       where: {
-        clubId: parseInt(clubId),
+        clubId: parsedClubId,
         role: 'ADMIN',
       },
     })
 
-    if (!adminUser) {
-      return NextResponse.json({ error: 'Admin user for this club not found.' }, { status: 404 })
-    }
+    let updatedUser = null
 
-    // Prepare update data
-    const updateData: any = {}
-    if (adminName) {
-      updateData.name = adminName.trim()
-    }
-
-    if (adminEmail) {
-      const cleanEmail = adminEmail.trim().toLowerCase()
-      // Check email uniqueness
-      const existingUser = await prisma.user.findFirst({
-        where: {
-          email: cleanEmail,
-          NOT: { id: adminUser.id },
-        },
-      })
-      if (existingUser) {
-        return NextResponse.json({ error: 'A user with this email address already exists.' }, { status: 409 })
+    if (adminUser) {
+      // Prepare update data
+      const updateData: any = {}
+      if (adminName) {
+        updateData.name = adminName.trim()
       }
-      updateData.email = cleanEmail
-    }
 
-    if (adminPassword && adminPassword.trim() !== '') {
-      if (adminPassword.length < 6) {
-        return NextResponse.json({ error: 'Password must be at least 6 characters.' }, { status: 400 })
+      if (adminEmail) {
+        const cleanEmail = adminEmail.trim().toLowerCase()
+        // Check email uniqueness
+        const existingUser = await prisma.user.findFirst({
+          where: {
+            email: cleanEmail,
+            NOT: { id: adminUser.id },
+          },
+        })
+        if (existingUser) {
+          return NextResponse.json({ error: 'A user with this email address already exists.' }, { status: 409 })
+        }
+        updateData.email = cleanEmail
       }
-      updateData.password = await bcrypt.hash(adminPassword, 12)
+
+      if (adminPassword && adminPassword.trim() !== '') {
+        if (adminPassword.length < 6) {
+          return NextResponse.json({ error: 'Password must be at least 6 characters.' }, { status: 400 })
+        }
+        updateData.password = await bcrypt.hash(adminPassword, 12)
+      }
+
+      // Update the admin user
+      if (Object.keys(updateData).length > 0) {
+        updatedUser = await prisma.user.update({
+          where: { id: adminUser.id },
+          data: updateData,
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        })
+      }
     }
 
-    // Update the admin user
-    const updatedUser = await prisma.user.update({
-      where: { id: adminUser.id },
-      data: updateData,
-      select: {
-        id: true,
-        name: true,
-        email: true,
-      },
-    })
-
-    return NextResponse.json(updatedUser)
+    return NextResponse.json({ success: true, user: updatedUser })
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Failed to update admin credentials' }, { status: 500 })
+    return NextResponse.json({ error: error.message || 'Failed to update club/admin details' }, { status: 500 })
   }
 }
