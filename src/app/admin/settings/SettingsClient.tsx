@@ -2,16 +2,51 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { Save, Building2, CreditCard, Mail, Send, Palette } from 'lucide-react'
+import { Save, Building2, CreditCard, Mail, Send, Palette, Upload } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 interface Props { settings: any; coaches: any[] }
 
 export default function SettingsClient({ settings: initial, coaches }: Props) {
+  const router = useRouter()
   const [form, setForm] = useState(initial)
   const [saving, setSaving] = useState(false)
   const [testEmail, setTestEmail] = useState('')
   const [sendingTest, setSendingTest] = useState(false)
+  const [uploadingLogo, setUploadingLogo] = useState(false)
+
   const set = (k: string, v: any) => setForm((f: any) => ({ ...f, [k]: v }))
+
+  const handleThemeChange = (newTheme: string) => {
+    set('theme', newTheme)
+    const htmlElement = document.documentElement
+    const classes = Array.from(htmlElement.classList).filter(c => !c.startsWith('theme-'))
+    htmlElement.className = [...classes, `theme-${newTheme}`].join(' ')
+  }
+
+  async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploadingLogo(true)
+    const formData = new FormData()
+    formData.append('file', file)
+
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      })
+      if (!res.ok) throw new Error('Upload failed')
+      const data = await res.json()
+      set('clubLogo', data.url)
+      toast.success('Club logo uploaded successfully!')
+    } catch {
+      toast.error('Failed to upload club logo')
+    } finally {
+      setUploadingLogo(false)
+    }
+  }
 
   async function handleSendTestEmail() {
     if (!testEmail) {
@@ -54,6 +89,7 @@ export default function SettingsClient({ settings: initial, coaches }: Props) {
       })
       if (!res.ok) throw new Error()
       toast.success('Settings saved!')
+      router.refresh()
     } catch { toast.error('Failed to save') }
     finally { setSaving(false) }
   }
@@ -64,6 +100,31 @@ export default function SettingsClient({ settings: initial, coaches }: Props) {
         {/* Club Info */}
         <div className="card" style={{ marginBottom: '1.25rem' }}>
           <h3 style={{ fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Building2 size={18} style={{ color: 'var(--brand)' }} /> Club Information</h3>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.25rem' }}>
+            <div style={{ position: 'relative' }}>
+              {form.clubLogo ? (
+                <img src={form.clubLogo} alt="Club Logo" className="avatar" style={{ width: 64, height: 64, borderRadius: '8px', objectFit: 'contain', background: 'var(--surface-2)', border: '1px solid var(--border)' }} />
+              ) : (
+                <div className="avatar" style={{ width: 64, height: 64, fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}>
+                  No Logo
+                </div>
+              )}
+            </div>
+            <div style={{ flex: 1 }}>
+              <label className="form-label" style={{ marginBottom: '0.25rem' }}>Club Logo</label>
+              <input 
+                type="file" 
+                className="input" 
+                accept="image/png, image/jpeg, image/jpg"
+                onChange={handleLogoUpload}
+                disabled={uploadingLogo || saving}
+                style={{ padding: '0.35rem 0.5rem', fontSize: '0.8rem', maxWidth: '300px' }}
+              />
+              {uploadingLogo && <span style={{ fontSize: '0.75rem', color: 'var(--brand)', marginTop: '0.25rem', display: 'block' }}>Uploading...</span>}
+            </div>
+          </div>
+
           <div className="form-group">
             <label className="form-label">Club Name *</label>
             <input className="input" value={form.clubName || ''} onChange={e => set('clubName', e.target.value)} required />
@@ -99,7 +160,7 @@ export default function SettingsClient({ settings: initial, coaches }: Props) {
           <h3 style={{ fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Palette size={18} style={{ color: 'var(--brand)' }} /> Interface Customization</h3>
           <div className="form-group">
             <label className="form-label">Active Portal Theme</label>
-            <select className="input" value={form.theme || 'default'} onChange={e => set('theme', e.target.value)}>
+            <select className="input" value={form.theme || 'default'} onChange={e => handleThemeChange(e.target.value)}>
               <option value="default">Default Light</option>
               <option value="dark">Slate Dark</option>
               <option value="emerald">Emerald Green</option>

@@ -76,7 +76,17 @@ export async function PUT(req: NextRequest) {
       ...(body.smtpFromName !== undefined && { smtpFromName: body.smtpFromName }),
       ...(body.currency !== undefined && { currency: body.currency }),
       ...(body.theme !== undefined && { theme: body.theme }),
+      ...(body.clubLogo !== undefined && { clubLogo: body.clubLogo }),
     },
+  })
+
+  // Sync to Club model
+  await prisma.club.update({
+    where: { id: clubId },
+    data: {
+      ...(body.clubName && { name: body.clubName }),
+      ...(body.clubLogo !== undefined && { logo: body.clubLogo }),
+    }
   })
 
   return NextResponse.json(settings)
