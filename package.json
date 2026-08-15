@@ -4,13 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/prepare-build.js && prisma generate && opennextjs-cloudflare build",
+    "build": "node scripts/prepare-build.js && prisma generate && next build",
     "start": "npx prisma db push --accept-data-loss && npx tsx scripts/ensure-seed.ts && next start",
     "lint": "eslint",
     "db:push": "prisma db push",
     "db:seed": "npx tsx prisma/seed.ts",
     "db:studio": "prisma studio",
-    "build:cloudflare": "node scripts/prepare-build.js && prisma generate && opennextjs-cloudflare build",
+    "build:cloudflare": "opennextjs-cloudflare build",
     "preview:cloudflare": "npm run build:cloudflare && wrangler dev",
     "deploy:cloudflare": "npm run build:cloudflare && wrangler deploy"
   },
