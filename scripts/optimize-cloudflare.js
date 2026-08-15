@@ -30,10 +30,11 @@ files.forEach(file => {
     .replaceAll('D:/Antigravity/bb/.open-next/server-functions/default/', './')
     .replaceAll('D:\\Antigravity\\bb\\.open-next\\server-functions\\default\\', './');
 
-  // Replace unused WASM references with the sqlite one
+  // Redirect all WASM references to the single deduplicated query_engine_bg.wasm
   replaced = replaced
-    .replaceAll('query_engine_bg.mysql.wasm', 'query_engine_bg.sqlite.wasm')
-    .replaceAll('query_engine_bg.postgresql.wasm', 'query_engine_bg.sqlite.wasm');
+    .replaceAll('query_engine_bg.mysql.wasm', '../../.prisma/client/query_engine_bg.wasm')
+    .replaceAll('query_engine_bg.postgresql.wasm', '../../.prisma/client/query_engine_bg.wasm')
+    .replaceAll('query_engine_bg.sqlite.wasm', '../../.prisma/client/query_engine_bg.wasm');
 
   if (replaced !== content) {
     console.log(`✅ Optimized paths & imports in: ${file}`);
@@ -41,7 +42,7 @@ files.forEach(file => {
   }
 });
 
-// 2. Delete unused WASM files
+// 2. Delete unused and redundant WASM files
 function deleteFiles(dir) {
   if (!fs.existsSync(dir)) return;
   const list = fs.readdirSync(dir);
@@ -50,8 +51,12 @@ function deleteFiles(dir) {
     const stat = fs.statSync(file);
     if (stat && stat.isDirectory()) {
       deleteFiles(file);
-    } else if (file.endsWith('mysql.wasm') || file.endsWith('postgresql.wasm')) {
-      console.log(`🗑️ Deleted unused WASM engine: ${file}`);
+    } else if (
+      file.endsWith('mysql.wasm') || 
+      file.endsWith('postgresql.wasm') || 
+      file.endsWith('sqlite.wasm')
+    ) {
+      console.log(`🗑️ Deleted redundant WASM engine: ${file}`);
       fs.unlinkSync(file);
     }
   });

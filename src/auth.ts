@@ -4,14 +4,11 @@ import { PrismaAdapter } from '@auth/prisma-adapter'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 import { z } from 'zod'
+import { authConfig } from './auth.config'
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
   adapter: PrismaAdapter(prisma) as any,
-  session: { strategy: 'jwt' },
-  pages: {
-    signIn: '/auth/login',
-    error: '/auth/error',
-  },
   providers: [
     Credentials({
       name: 'credentials',
@@ -46,22 +43,4 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id
-        token.role = (user as any).role
-        token.clubId = (user as any).clubId
-      }
-      return token
-    },
-    async session({ session, token }) {
-      if (token && session.user) {
-        session.user.id = token.id as string
-        ;(session.user as any).role = token.role
-        ;(session.user as any).clubId = token.clubId
-      }
-      return session
-    },
-  },
 })
