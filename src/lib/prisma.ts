@@ -7,14 +7,18 @@ const getDb = cache(() => {
   try {
     const { env } = getCloudflareContext() as { env: { DB?: any } }
     if (env && env.DB) {
+      console.log('📡 Prisma successfully connected using Cloudflare D1 adapter')
       const adapter = new PrismaD1(env.DB)
       return new PrismaClient({ adapter: adapter as any })
+    } else {
+      console.warn('⚠️ env.DB not found in Cloudflare context. Falling back to local SQLite client.')
     }
   } catch (e) {
-    // getCloudflareContext will throw or fail outside request/Cloudflare context, e.g. during build or CLI seeds
+    console.error('❌ Failed to retrieve Cloudflare context inside Prisma getDb:', e)
   }
 
   // Fallback to local SQLite file database
+  console.log('🔌 Initializing fallback Node.js SQLite Prisma client')
   return new PrismaClient({
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
   })
