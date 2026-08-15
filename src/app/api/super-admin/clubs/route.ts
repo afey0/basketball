@@ -49,6 +49,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'All fields are required.' }, { status: 400 })
     }
 
+    if (adminPassword.length < 6) {
+      return NextResponse.json({ error: 'Password must be at least 6 characters.' }, { status: 400 })
+    }
+
     // Clean slug
     const cleanSlug = slug.toLowerCase().trim().replace(/[^a-z0-9-]/g, '')
 

@@ -47,3 +47,7 @@ next-env.d.ts
 # Uploads
 /public/uploads/
 
+# Cloudflare / OpenNext
+/.open-next/
+/.wrangler/
+
