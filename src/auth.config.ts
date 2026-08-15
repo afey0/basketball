@@ -26,5 +26,4 @@ export const authConfig = {
       return session
     },
   },
-  providers: [], // to be configured in auth.ts
 } satisfies NextAuthConfig
