@@ -11,7 +11,7 @@
     "db:seed": "npx tsx prisma/seed.ts",
     "db:studio": "prisma studio",
     "build:cloudflare": "opennextjs-cloudflare build && node scripts/optimize-cloudflare.js",
-    "preview:cloudflare": "npm run build:cloudflare && wrangler dev",
+    "preview:cloudflare": "npm run build:cloudflare && wrangler dev --remote",
     "deploy:cloudflare": "npm run build:cloudflare && wrangler deploy"
   },
   "prisma": {

@@ -32,9 +32,9 @@ files.forEach(file => {
 
   // Redirect all WASM references to the single deduplicated query_engine_bg.wasm
   replaced = replaced
-    .replaceAll('query_engine_bg.mysql.wasm', '../../.prisma/client/query_engine_bg.wasm')
-    .replaceAll('query_engine_bg.postgresql.wasm', '../../.prisma/client/query_engine_bg.wasm')
-    .replaceAll('query_engine_bg.sqlite.wasm', '../../.prisma/client/query_engine_bg.wasm');
+    .replaceAll('query_engine_bg.mysql.wasm', '../../../.prisma/client/query_engine_bg.wasm')
+    .replaceAll('query_engine_bg.postgresql.wasm', '../../../.prisma/client/query_engine_bg.wasm')
+    .replaceAll('query_engine_bg.sqlite.wasm', '../../../.prisma/client/query_engine_bg.wasm');
 
   if (replaced !== content) {
     console.log(`✅ Optimized paths & imports in: ${file}`);
