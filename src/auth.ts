@@ -9,8 +9,7 @@ console.log('📦 DIAGNOSTICS - NextAuth:', typeof NextAuth)
 console.log('📦 DIAGNOSTICS - Credentials:', typeof Credentials)
 console.log('📦 DIAGNOSTICS - bcrypt:', typeof bcrypt)
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
-  ...authConfig,
+const authOptions = Object.assign({}, authConfig, {
   providers: [
     Credentials({
       name: 'credentials',
@@ -61,3 +60,5 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
 })
+
+export const { handlers, auth, signIn, signOut } = NextAuth(authOptions)

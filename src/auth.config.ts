@@ -26,4 +26,5 @@ export const authConfig = {
       return session
     },
   },
+  providers: [], // configured dynamically in auth.ts to avoid compiler duplicate key bugs
 } satisfies NextAuthConfig
