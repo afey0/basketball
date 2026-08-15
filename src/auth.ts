@@ -5,6 +5,10 @@ import bcrypt from 'bcryptjs'
 import { z } from 'zod'
 import { authConfig } from './auth.config'
 
+console.log('📦 DIAGNOSTICS - NextAuth:', typeof NextAuth)
+console.log('📦 DIAGNOSTICS - Credentials:', typeof Credentials)
+console.log('📦 DIAGNOSTICS - bcrypt:', typeof bcrypt)
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   providers: [
