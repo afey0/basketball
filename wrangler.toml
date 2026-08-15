@@ -12,3 +12,9 @@ directory = ".open-next/assets"
 binding = "DB"
 database_name = "db-bbclub-mgt"
 database_id = "b0c139ca-8408-4f1d-a852-777e71a041b9"
+
+[vars]
+AUTH_SECRET = "bball-crm-secret-key-2026-change-me-in-prod!"
+NEXTAUTH_URL = "https://basketballclub-mgt.ahmed-afrad.workers.dev"
+AUTH_URL = "https://basketballclub-mgt.ahmed-afrad.workers.dev/api/auth"
+AUTH_TRUST_HOST = "true"
